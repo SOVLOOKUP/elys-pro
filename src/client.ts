@@ -5,7 +5,7 @@ const client = treaty<typeof mainApp>("localhost:3000")
 
 const res = await client.workers({
     name: "default"
-}).start.post()
+}).stop.post()
 
 console.log(res.data)
 

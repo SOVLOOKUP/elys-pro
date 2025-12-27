@@ -256,7 +256,7 @@ const mainApp = new Elysia()
 // 如果通过直接运行此文件，则启动主服务器和所有 workers
 if (import.meta.main) {
 
-    // test 注册默认的 worker（如果存在）
+    // todo test 注册默认的 worker（如果存在）
     workerManager.registerWorker({
         name: 'default',
         port: 3001,

@@ -1,6 +1,4 @@
-declare var self: Worker;
-
-import type Elysia from 'elysia';
+import Elysia from 'elysia';
 
 // 保存服务器实例以便能够优雅地关闭它
 let serverInstance: Elysia | null = null;
@@ -14,11 +12,11 @@ addEventListener("message", async (event) => {
             // 导入 worker 模块
             const workerModule = await import(data.workerPath);
 
-            if (!workerModule.app) {
+            if (!(workerModule.app instanceof Elysia)) {
                 throw new Error('Worker module does not export an app instance');
             }
 
-            let app = workerModule.app;
+            let app = workerModule.app as Elysia;
 
             // 添加健康检查路由（如果需要且不存在）
             if (data.healthCheck) {
@@ -47,21 +45,21 @@ addEventListener("message", async (event) => {
             if (data.prefix) {
                 const prefixedApp = new (await import('elysia')).Elysia({ prefix: data.prefix });
                 prefixedApp.use(app);
-                serverInstance = await prefixedApp.listen({ port: data.port });
+                serverInstance = prefixedApp.listen({ port: data.port });
 
                 postMessage({
                     type: 'started',
                     message: `Worker ${data.name} with prefix ${data.prefix} started on port ${data.port}`
                 });
             } else {
-                serverInstance = await app.listen({ port: data.port });
-
+                serverInstance = app.listen({ port: data.port });
                 postMessage({
                     type: 'started',
                     message: `Worker ${data.name} started on port ${data.port}`
                 });
             }
-        } catch (error: any) {
+
+        } catch (error: unknown) {
             postMessage({
                 type: 'error',
                 error: error.message
@@ -70,26 +68,27 @@ addEventListener("message", async (event) => {
     } else if (type === 'terminate') {
         // 等待所有 HTTP 会话都退出或 30 秒后强制终止
         if (serverInstance && serverInstance.stop) {
-            // console.log(`Worker ${name} is shutting down gracefully...`);
+            const name = serverInstance.decorator.workerName;
+            console.log(`Worker ${name} is shutting down gracefully...`);
 
             // 设置 30 秒超时，超时后强制退出
             const forceExitTimer = setTimeout(() => {
-                // console.log(`Worker ${name} force exit after 30 seconds timeout.`);
+                console.log(`Worker ${name} force exit after 30 seconds timeout.`);
                 process.exit(0);
             }, 30000); // 30秒超时
 
             // 尝试优雅地关闭服务器
             serverInstance.stop().then(() => {
                 clearTimeout(forceExitTimer);
-                // console.log(`Worker ${name} shutdown completed.`);
+                console.log(`Worker ${name} shutdown completed.`);
                 // 发送关闭完成消息给主进程
                 postMessage({
                     type: 'shutdown',
-                    message: `Worker shutdown completed.`
+                    message: `Worker ${name} shutdown completed.`
                 });
                 process.exit(0);
             }).catch((error: any) => {
-                // console.error(`Error during graceful shutdown of worker ${name}:`, error);
+                console.error(`Error during graceful shutdown of worker ${name}:`, error);
                 clearTimeout(forceExitTimer);
                 // 发送错误消息给主进程
                 postMessage({
