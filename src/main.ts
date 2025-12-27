@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { join } from "path";
 
 interface WorkerConfig {
     name: string;
@@ -48,7 +49,7 @@ class WorkerManager {
         return new Promise((resolve, reject) => {
             try {
                 // 创建 Bun Worker 来运行 Elysia 应用
-                const worker = new Worker('./worker-runner.ts');
+                const worker = new Worker(join(__dirname, './worker-runner.ts'));
 
                 // 监听 worker 消息
                 worker.addEventListener('message', (event) => {
@@ -255,11 +256,11 @@ const mainApp = new Elysia()
 // 如果通过直接运行此文件，则启动主服务器和所有 workers
 if (import.meta.main) {
 
-    // 注册默认的 worker（如果存在）
+    // test 注册默认的 worker（如果存在）
     workerManager.registerWorker({
         name: 'default',
         port: 3001,
-        workerPath: './worker', // 默认加载当前的 worker.ts
+        workerPath: './worker-test', // 默认加载当前的 worker.ts
         enabled: true,
         healthCheck: true
     });
