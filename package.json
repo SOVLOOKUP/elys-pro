@@ -2,9 +2,9 @@
   "name": "elys-pro",
   "main": "worker.ts",
   "scripts": {
-    "start": "bun run main.ts",
-    "dev": "bun run --hot worker.ts",
-    "worker": "bun run worker.ts"
+    "dev": "bun run --hot src/main.ts",
+    "build": "bun build ./src/main.ts ./src/worker-runner.ts --outdir ./dist",
+    "bundle": "bun build --compile --minify ./src/main.ts ./src/worker-runner.ts --outfile ./dist/main"
   },
   "type": "module",
   "private": true,
