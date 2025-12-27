@@ -1,5 +1,13 @@
 import { Elysia } from "elysia";
 import { join } from "path";
+import { file } from "bun";
+// @ts-ignore
+import runner from "./worker-runner" with { type: "file"}
+
+const runnerBlob = file(runner, {
+    type: "application/typescript",
+});
+const workerBlob = URL.createObjectURL(runnerBlob);
 
 interface WorkerConfig {
     name: string;
@@ -49,7 +57,7 @@ class WorkerManager {
         return new Promise((resolve, reject) => {
             try {
                 // 创建 Bun Worker 来运行 Elysia 应用
-                const worker = new Worker(join(__dirname, './worker-runner.ts'));
+                const worker = new Worker(workerBlob);
 
                 // 监听 worker 消息
                 worker.addEventListener('message', (event) => {
@@ -260,7 +268,7 @@ if (import.meta.main) {
     workerManager.registerWorker({
         name: 'default',
         port: 3001,
-        workerPath: './worker-test', // 默认加载当前的 worker.ts
+        workerPath: '/home/xiafan/桌面/elys-pro/test/worker-test.ts', // 默认加载当前的 worker.ts
         enabled: true,
         healthCheck: true
     });
@@ -271,7 +279,7 @@ if (import.meta.main) {
             const mainPort = parseInt(process.env.MAIN_PORT || '8080');
 
             // 启动主管理服务器
-            const mainServer = await mainApp.listen({ port: mainPort });
+            const mainServer = mainApp.listen({ port: mainPort });
             console.log(`Main worker manager server started on port ${mainPort}`);
 
             // 启动所有注册的 workers

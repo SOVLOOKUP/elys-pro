@@ -60,14 +60,16 @@ addEventListener("message", async (event) => {
             }
 
         } catch (error: unknown) {
+            const err = error instanceof Error ? error.message : String(error);
             postMessage({
                 type: 'error',
-                error: error.message
+                error: err
             });
         }
     } else if (type === 'terminate') {
         // 等待所有 HTTP 会话都退出或 30 秒后强制终止
         if (serverInstance && serverInstance.stop) {
+            // @ts-ignore
             const name = serverInstance.decorator.workerName;
             console.log(`Worker ${name} is shutting down gracefully...`);
 

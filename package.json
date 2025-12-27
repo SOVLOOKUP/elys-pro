@@ -3,8 +3,8 @@
   "main": "worker.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
-    "build": "bun build ./src/main.ts ./src/worker-runner.ts --outdir ./dist",
-    "bundle": "bun build --compile --minify ./src/main.ts ./src/worker-runner.ts --outfile ./dist/main"
+    "build": "bun build ./src/main.ts --target bun --outdir ./dist",
+    "bundle": "bun build --compile --minify ./src/main.ts --outfile ./dist/main"
   },
   "type": "module",
   "private": true,
