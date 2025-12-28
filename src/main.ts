@@ -278,7 +278,7 @@ if (import.meta.main) {
   workerManager.registerWorker({
     name: "default",
     port: 3001,
-    workerPath: "./worker-test", // 默认加载当前的 worker.ts
+    workerPath: "../test/worker-test", // 默认加载当前的 worker.ts
     enabled: true,
     healthCheck: true,
   });
@@ -289,7 +289,7 @@ if (import.meta.main) {
       const mainPort = parseInt(process.env.MAIN_PORT || "8080");
 
       // 启动主管理服务器
-      const mainServer = await mainApp.listen({ port: mainPort });
+      const mainServer = mainApp.listen({ port: mainPort });
       console.log(`Main worker manager server started on port ${mainPort}`);
 
       // 启动所有注册的 workers
