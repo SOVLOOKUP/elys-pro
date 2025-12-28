@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.6",
-    "elysia": "^1.4.19"
+    "elysia": "^1.4.19",
+    "opendal": "^0.49.2"
   }
 }

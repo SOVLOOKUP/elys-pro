@@ -43,7 +43,7 @@ addEventListener("message", async (event) => {
 
       // 如果指定了前缀，使用前缀
       if (data.prefix) {
-        const prefixedApp = new (await import("elysia")).Elysia({
+        const prefixedApp = new Elysia({
           prefix: data.prefix,
         });
         prefixedApp.use(app);
