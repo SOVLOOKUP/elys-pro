@@ -1,10 +1,9 @@
 {
   "name": "elys-pro",
-  "main": "worker.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
-    "build": "bun build ./src/main.ts --target bun --outdir ./dist",
-    "bundle": "bun build --compile --minify ./src/main.ts --outfile ./dist/main"
+    "build": "bun build --splitting ./src/main.ts ./src/workers/* --target bun --outdir ./dist",
+    "bundle": "bun build --compile --splitting --minify ./src/main.ts ./src/workers/* --outfile ./dist/main"
   },
   "type": "module",
   "private": true,
@@ -16,7 +15,10 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.6",
+    "@types/fs-extra": "^11.0.4",
     "elysia": "^1.4.19",
+    "fdir": "^6.5.0",
+    "fs-extra": "^11.3.3",
     "opendal": "^0.49.2"
   }
 }

@@ -1,5 +1,5 @@
-import { Elysia } from "elysia";
-import { join } from "path";
+import { Elysia, NotFoundError, status, t, ValidationError } from "elysia";
+import { join, resolve } from "path";
 
 interface WorkerConfig {
   name: string;
@@ -51,7 +51,7 @@ class WorkerManager {
     return new Promise((resolve, reject) => {
       try {
         // 创建 Bun Worker 来运行 Elysia 应用
-        const worker = new Worker(join(__dirname, "./worker-runner.ts"));
+        const worker = new Worker(join(__dirname, "./workers/worker-runner.ts"));
 
         // 监听 worker 消息
         worker.addEventListener("message", (event) => {
@@ -226,6 +226,26 @@ class WorkerManager {
 // 创建全局 worker 管理器实例
 const workerManager = new WorkerManager();
 
+import { ensureDir, exists, remove, rm } from "fs-extra";
+import { fdir } from "fdir";
+
+const app_path = "./app";
+
+await ensureDir(app_path);
+
+const lsdir = async (path: string) => {
+  const api = new fdir({
+    excludeFiles: true,
+    includeDirs: true,
+    maxDepth: 0,
+    relativePaths: true,
+    filters: [(path) => path !== "."],
+  }).crawl(path)
+
+  const paths = (await api.withPromise()).map((item) => item.slice(0, -1));
+  return paths
+}
+
 // 主服务器，用于管理所有 workers
 const mainApp = new Elysia()
   .get("/workers", ({ query }) => {
@@ -270,18 +290,159 @@ const mainApp = new Elysia()
     runningWorkers: workerManager
       .getStatus()
       .filter((w) => w.status === "running").length,
-  }));
+  }))
+  .group("/app", app => app
+    // 获取所有项目
+    .get("/", async () => lsdir(app_path))
+    // 获取指定项目所有版本
+    .get("/:name", async ({ params }) => {
+      const project_path = resolve(app_path, params.name)
+
+      if (!await exists(project_path)) {
+        return new NotFoundError(`${project_path} not found`)
+      } else {
+        return lsdir(project_path)
+      }
+    })
+    // 删除项目或项目特定版本;
+    .delete("/:name", async ({ params, query }) => {
+      const project_path = resolve(app_path, params.name, query.version === "all" ? "" : query.version)
+
+      if (!await exists(project_path)) {
+        return status(404)
+      } else {
+        await rm(project_path, { recursive: true, force: true })
+        return { message: `${project_path} deleted` }
+      }
+    }, {
+      query: t.Object({
+        version: t.Union([t.String(), t.Literal("all")])
+      })
+    })
+    // 上传项目
+    .post("/:name", async ({ params, body, query }) => {
+      const project_path = resolve(app_path, params.name, query.version)
+      const index_path = resolve(project_path, "index.js")
+
+      if (await exists(project_path)) {
+        return status(403)
+      } else {
+        await ensureDir(project_path)
+
+        if (body.file.type === "application/zip") {
+          // zip 解压写入
+          const zipBuffer = await body.file.arrayBuffer();
+          const tempZipPath = resolve(project_path, "temp.zip");
+
+          // 先保存 zip 文件到临时位置
+          await Bun.write(tempZipPath, zipBuffer);
+
+          // 使用 Bun 的 shell 能力解压
+          const proc = Bun.spawn(["unzip", "-o", "temp.zip"], {
+            cwd: project_path,
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+
+          await proc.exited;
+
+          // 删除临时 zip 文件
+          await rm(tempZipPath, { force: true });
+        } else {
+          // js 直接写入
+          await Bun.write(index_path, body.file);
+        }
+        // 检测是否是合法可运行的 elysia 文件
+        // 使用 Worker 隔离验证，防止影响主线程
+        const validationResult = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          const validator = new Worker(join(__dirname, "./workers/validator.ts"));
+
+          // 设置超时
+          const timeout = setTimeout(() => {
+            validator.terminate();
+            resolve({ success: false, error: "Validation timeout" });
+          }, 5000); // 5秒超时
+
+          validator.addEventListener("message", (event) => {
+            clearTimeout(timeout);
+            const message = event.data;
+
+            if (message.type === "validation-success") {
+              validator.terminate();
+              resolve({ success: true });
+            } else if (message.type === "validation-failed") {
+              validator.terminate();
+              resolve({ success: false, error: message.message });
+            } else if (message.type === "validation-error") {
+              validator.terminate();
+              resolve({ success: false, error: message.error });
+            }
+          });
+
+          validator.addEventListener("error", (error) => {
+            clearTimeout(timeout);
+            validator.terminate();
+            resolve({ success: false, error: String(error) });
+          });
+
+          // 发送验证请求
+          validator.postMessage({
+            type: "validate",
+            data: { modulePath: index_path },
+          });
+        });
+
+        if (!validationResult.success) {
+          // 验证失败，删除已上传的文件
+          await rm(project_path, { recursive: true, force: true });
+          return status(400, validationResult.error || "Invalid Elysia application");
+        }
+
+        return { message: "Project uploaded and validated successfully" };
+
+      }
+    }, {
+      body: t.Object({
+        file: t.File({
+          type: ["text/javascript", "application/zip"]
+        })
+      }),
+      query: t.Object({
+        version: t.String()
+      })
+    })
+    // 代理到app进行处理
+    .all("/:name/:version/*", async (req) => {
+      const project_path = resolve(app_path, req.params.name, req.params.version)
+      const index_path = resolve(project_path, "index.js")
+
+      if (!await exists(index_path)) {
+        return status(404)
+      } else {
+        const workerModule = await import(index_path);
+
+        // 验证是否是合法的 Elysia 应用
+        const app = workerModule.app as Elysia;
+
+        // todo 将url中/:name/:version去除
+        req.request.url
+
+        return await app.handle(req.request)
+      }
+    })
+  )
+
 
 // 如果通过直接运行此文件，则启动主服务器和所有 workers
 if (import.meta.main) {
-  // todo test 注册默认的 worker（如果存在）
-  workerManager.registerWorker({
-    name: "default",
-    port: 3001,
-    workerPath: "../test/worker-test", // 默认加载当前的 worker.ts
-    enabled: true,
-    healthCheck: true,
-  });
+  // test 注册默认的 worker（如果存在）
+  // workerManager.registerWorker({
+  //   name: "default",
+  //   port: 3001,
+  //   workerPath: "../test/worker-test", // 默认加载当前的 worker.ts
+  //   enabled: true,
+  //   healthCheck: true,
+  // });
 
   const startMain = async () => {
     try {
