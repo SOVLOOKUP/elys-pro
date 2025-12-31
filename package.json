@@ -8,7 +8,8 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/semver": "^7.7.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
@@ -19,6 +20,7 @@
     "elysia": "^1.4.19",
     "fdir": "^6.5.0",
     "fs-extra": "^11.3.3",
-    "opendal": "^0.49.2"
+    "opendal": "^0.49.2",
+    "semver": "^7.7.3"
   }
 }
