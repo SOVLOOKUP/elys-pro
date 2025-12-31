@@ -1,15 +1,12 @@
-import Elysia from "elysia";
-
 addEventListener("message", async (event) => {
   const { type, data } = event.data;
 
   if (type === "validate") {
     try {
       const { modulePath } = data;
-
       const workerModule = await import(modulePath);
 
-      if (workerModule.app instanceof Elysia) {
+      if (typeof workerModule.app?.config?.seed === "string") {
         postMessage({
           type: "validation-success",
           message: "Valid Elysia application",

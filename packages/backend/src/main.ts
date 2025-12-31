@@ -127,7 +127,6 @@ const mainApp = new Elysia().group("/app", (app) =>
             });
           });
 
-          console.log(validationResult);
           if (!validationResult.success) {
             await rm(project_path, { recursive: true, force: true });
             return status(
@@ -142,7 +141,9 @@ const mainApp = new Elysia().group("/app", (app) =>
       {
         body: t.Object({
           file: t.File({
-            type: ["text/javascript", "application/zip"],
+            name: t.String({
+              pattern: "/$ ^.*\.(js|zip)$/",
+            }),
           }),
         }),
         query: t.Object({
@@ -193,8 +194,7 @@ if (import.meta.main) {
     console.log(`Attempting to start server on port ${mainPort}...`);
 
     mainApp.use(cors()).listen({ port: mainPort });
-    console.log(`✓ Main worker manager server started on port ${mainPort}`);
-    console.log(`  Server URL: http://localhost:${mainPort}`);
+    console.log(`Server URL: http://localhost:${mainPort}`);
   } catch (error) {
     console.error("✗ Failed to start main server:", error);
     process.exit(1);
