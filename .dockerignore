@@ -1,0 +1,26 @@
+# 依赖
+node_modules
+bun.lockb
+*.lock
+
+# 源代码（只需要构建产物）
+packages/backend/src
+packages/backend/test
+packages/frontend
+
+# 开发文件
+*.md
+.git
+.gitignore
+.vscode
+.idea
+*.log
+
+# 构建缓存
+dist
+.nuxt
+.output
+
+# 环境变量
+.env
+.env.local

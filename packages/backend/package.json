@@ -6,7 +6,7 @@
   "module": "src/client.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
-    "build": "bun build --splitting ./src/main.ts ./src/workers/* --target bun --outdir ./dist",
+    "build": "bun run build.ts",
     "bundle": "bun build --compile --splitting --minify ./src/main.ts ./src/workers/* --outfile ./dist/main"
   },
   "type": "module",
