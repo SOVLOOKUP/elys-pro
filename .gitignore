@@ -8,5 +8,5 @@ dist/
 .env
 .env.*
 !.env.example
-/packages/backend/app/
+/packages/backend/app_data/
 coverage/

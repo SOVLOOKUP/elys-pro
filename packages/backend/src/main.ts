@@ -5,7 +5,7 @@ import { ensureDir, exists, rm } from "fs-extra";
 import { fdir } from "fdir";
 import cors from "@elysiajs/cors";
 
-const app_path = "./app";
+const app_path = "./app_data";
 
 await ensureDir(app_path);
 

@@ -2,6 +2,8 @@
   "name": "elys-pro-backend",
   "version": "1.0.0",
   "private": true,
+  "main": "src/client.ts",
+  "module": "src/client.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "build": "bun build --splitting ./src/main.ts ./src/workers/* --target bun --outdir ./dist",
