@@ -1,26 +1,12 @@
 {
   "name": "elys-pro",
-  "scripts": {
-    "dev": "bun run --hot src/main.ts",
-    "build": "bun build --splitting ./src/main.ts ./src/workers/* --target bun --outdir ./dist",
-    "bundle": "bun build --compile --splitting --minify ./src/main.ts ./src/workers/* --outfile ./dist/main"
-  },
-  "type": "module",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {},
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/semver": "^7.7.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@elysiajs/eden": "^1.4.6",
-    "@types/fs-extra": "^11.0.4",
-    "elysia": "^1.4.19",
-    "fdir": "^6.5.0",
-    "fs-extra": "^11.3.3",
-    "opendal": "^0.49.2",
-    "semver": "^7.7.3"
+    "concurrently": "^9.2.1"
   }
 }

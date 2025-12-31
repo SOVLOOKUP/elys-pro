@@ -1,18 +1,10 @@
 # elys-pro
 
-To install dependencies:
+基于 elysia 的部署神器
 
-```bash
-bun install
-```
+快捷部署 elysia 应用，并实现对应用的高效管理
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.4. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+支持应用版本管理
 
 <!-- 测试 -->
 <!-- 前端界面 -->
