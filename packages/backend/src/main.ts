@@ -1,9 +1,9 @@
-import { Elysia, NotFoundError, status, t } from "elysia";
+import { Elysia, file, NotFoundError, status, t } from "elysia";
 import { join, resolve } from "path";
 import { maxSatisfying } from "semver";
 import { ensureDir, exists, rm } from "fs-extra";
 import { fdir } from "fdir";
-import cors from "@elysiajs/cors";
+import staticPlugin from "@elysiajs/static";
 
 const app_path = "./app_data";
 
@@ -44,7 +44,7 @@ const mainApp = new Elysia().group("/app", (app) =>
         );
 
         if (!(await exists(project_path))) {
-          return status(404);
+          return status(404, "Project not found");
         } else {
           await rm(project_path, { recursive: true, force: true });
           return { message: `${project_path} deleted` };
@@ -63,7 +63,7 @@ const mainApp = new Elysia().group("/app", (app) =>
         const index_path = resolve(project_path, "index.js");
 
         if (await exists(project_path)) {
-          return status(403);
+          return status(403, "Project already exists");
         } else {
           await ensureDir(project_path);
 
@@ -158,7 +158,7 @@ const mainApp = new Elysia().group("/app", (app) =>
           const versions = await lsdir(resolve(app_path, req.params.name));
           const latestVersion = maxSatisfying(versions, "*");
           if (!latestVersion) {
-            return status(404);
+            return status(404, "No versions found");
           }
           req.params.version = latestVersion;
         }
@@ -171,7 +171,7 @@ const mainApp = new Elysia().group("/app", (app) =>
         const index_path = resolve(project_path, "index.js");
 
         if (!(await exists(index_path))) {
-          return status(404);
+          return status(404, "Project not found");
         } else {
           const workerModule = await import(index_path);
           const app = new Elysia({
@@ -193,7 +193,31 @@ if (import.meta.main) {
 
     console.log(`Attempting to start server on port ${mainPort}...`);
 
-    mainApp.use(cors()).listen({ port: mainPort });
+    const FRONTEND_DIST_PATH = resolve(__dirname, "public")
+
+    if (await exists(FRONTEND_DIST_PATH)) {
+      mainApp
+        .use(
+          staticPlugin({
+            assets: FRONTEND_DIST_PATH,
+            prefix: "",
+            alwaysStatic: true,
+            indexHTML: false
+          }),
+        )
+        .get("/:name?", async ({ params }) => {
+          const ex = await exists(resolve(FRONTEND_DIST_PATH, params.name === undefined ? "index.html" : params.name))
+
+          if (!ex) {
+            return status(404, Bun.file(resolve(FRONTEND_DIST_PATH, "404.html")))
+          } else {
+            return Bun.file(resolve(FRONTEND_DIST_PATH, params.name === undefined ? "index.html" : params.name))
+          }
+        })
+    }
+
+    mainApp.listen({ port: mainPort });
+
     console.log(`Server URL: http://localhost:${mainPort}`);
   } catch (error) {
     console.error("✗ Failed to start main server:", error);
