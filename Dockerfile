@@ -17,4 +17,4 @@ ENV NODE_ENV=production
 ENV MAIN_PORT=3000
 
 # 启动应用
-CMD ["bun", "run", "/app/src/main.js"]
+CMD ["bun", "run", "src/main.js"]
