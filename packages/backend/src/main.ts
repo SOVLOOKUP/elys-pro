@@ -91,7 +91,7 @@ const mainApp = new Elysia().group("/app", (app) =>
             error?: string;
           }>((resolve) => {
             const validator = new Worker(
-              join(__dirname, "./workers/worker-validator.ts")
+              join(import.meta.dir, "./workers/worker-validator.ts")
             );
 
             const timeout = setTimeout(() => {
@@ -193,7 +193,7 @@ if (import.meta.main) {
 
     console.log(`Attempting to start server on port ${mainPort}...`);
 
-    const FRONTEND_DIST_PATH = resolve(__dirname, "public")
+    const FRONTEND_DIST_PATH = resolve(import.meta.dir, "./public")
 
     if (await exists(FRONTEND_DIST_PATH)) {
       mainApp
