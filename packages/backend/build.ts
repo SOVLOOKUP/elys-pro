@@ -19,8 +19,7 @@ await Promise.all([
         define: {
             "process.env.NODE_ENV": JSON.stringify("production"),
         }
-    }),
-    copy("../frontend/.output/public", "dist/src/public")
+    })
 ])
 
 console.log("Build completed!")
