@@ -1,14 +1,19 @@
-import { newClient } from "elys-pro-backend"
+import { newClient } from "elys-pro-backend";
 
 export default defineNuxtPlugin({
-  name: 'elysia',
+  name: "elysia",
   setup() {
-    const elysia = newClient('http://localhost:3000')
+    const baseURL =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : useRequestURL().origin;
+
+    const elysia = newClient(baseURL);
 
     return {
       provide: {
-        elysia
-      }
-    }
-  }
-}) 
+        elysia,
+      },
+    };
+  },
+});
