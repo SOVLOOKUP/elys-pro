@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  nitro: { preset: "cloudflare" },
+  nitro: { preset: "cloudflare-pages" },
 
   modules: [
     '@nuxt/eslint',
