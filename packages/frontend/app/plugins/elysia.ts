@@ -7,7 +7,7 @@ export default defineNuxtPlugin({
     const config = useConfigStore()
 
     if (typeof route.query.backendURL === "string") {
-      config.backendURL = route.query.backendURL
+      config.backendURL = decodeURIComponent(route.query.backendURL)
     }
 
     const baseURL =
