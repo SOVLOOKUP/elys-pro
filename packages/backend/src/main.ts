@@ -3,9 +3,11 @@ import { join, resolve } from "path";
 import { maxSatisfying } from "semver";
 import { ensureDir, exists, rm } from "fs-extra";
 import { fdir } from "fdir";
-import staticPlugin from "@elysiajs/static";
+import cors from "@elysiajs/cors";
 
 const app_path = "./app_data";
+const root_domain = /.*\.metapoint\.tech:?\d*$/
+const frontend_origin = "https://elys.metapoint.tech"
 
 await ensureDir(app_path);
 
@@ -24,6 +26,9 @@ const lsdir = async (path: string) => {
 
 const mainApp = new Elysia().group("/app", (app) =>
   app
+    .use(cors({
+      origin: [root_domain, /localhost:?\d*$/],
+    }))
     .get("/", async () => lsdir(app_path))
     .get("/:name", async ({ params }) => {
       const project_path = resolve(app_path, params.name);
@@ -193,30 +198,13 @@ if (import.meta.main) {
 
     console.log(`Attempting to start server on port ${mainPort}...`);
 
-    const FRONTEND_DIST_PATH = resolve(import.meta.dir, "./public")
-
-    if (await exists(FRONTEND_DIST_PATH)) {
-      mainApp
-        .use(
-          staticPlugin({
-            assets: FRONTEND_DIST_PATH,
-            prefix: "",
-            alwaysStatic: true,
-            indexHTML: false
-          }),
-        )
-        .get("/:name?", async ({ params }) => {
-          const ex = await exists(resolve(FRONTEND_DIST_PATH, params.name === undefined ? "index.html" : params.name))
-
-          if (!ex) {
-            return status(404, Bun.file(resolve(FRONTEND_DIST_PATH, "404.html")))
-          } else {
-            return Bun.file(resolve(FRONTEND_DIST_PATH, params.name === undefined ? "index.html" : params.name))
-          }
-        })
-    }
-
-    mainApp.listen({ port: mainPort });
+    mainApp
+      .get("/", ({ request }) => {
+        const target = new URL(frontend_origin)
+        target.searchParams.set("backendURL", encodeURIComponent(request.url))
+        return Response.redirect(target.href, 302)
+      })
+      .listen({ port: mainPort });
 
     console.log(`Server URL: http://localhost:${mainPort}`);
   } catch (error) {

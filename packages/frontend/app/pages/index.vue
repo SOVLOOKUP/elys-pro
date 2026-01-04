@@ -71,7 +71,6 @@ async function uploadApp() {
 
   loading.value = true
   try {
-    console.log(uploadForm.value.file)
     await $elysia.app({ name: uploadForm.value.name }).post(
       { file: uploadForm.value.file },
       {

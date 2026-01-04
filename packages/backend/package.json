@@ -11,8 +11,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
     "@elysiajs/eden": "^1.4.6",
-    "@elysiajs/static": "^1.4.7",
     "@types/fs-extra": "^11.0.4",
     "elysia": "^1.4.19",
     "fdir": "^6.5.0",

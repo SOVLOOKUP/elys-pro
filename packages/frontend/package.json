@@ -14,8 +14,10 @@
     "@iconify-json/lucide": "^1.2.82",
     "@iconify-json/simple-icons": "^1.2.64",
     "@nuxt/ui": "^4.3.0",
+    "@pinia/nuxt": "^0.11.3",
     "elys-pro-backend": "../backend",
-    "nuxt": "^4.2.2"
+    "nuxt": "^4.2.2",
+    "pinia": "^3.0.4"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.12.1",
