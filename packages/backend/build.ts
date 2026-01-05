@@ -1,25 +1,27 @@
+import { more_imports } from "./src/loader";
 import { fdir } from "fdir";
-import { copy, rm } from "fs-extra"
+import { copy, rm } from "fs-extra";
 
 const api = new fdir({
-    maxDepth: 0,
-    includeBasePath: true
+  maxDepth: 0,
+  includeBasePath: true,
 }).crawl("./src/workers");
 
-await rm("dist", { recursive: true, force: true })
+await rm("dist", { recursive: true, force: true });
 
 await Promise.all([
-    Bun.build({
-        splitting: true,
-        entrypoints: ['./src/main.ts', ...await api.withPromise()],
-        target: "bun",
-        outdir: "dist",
-        minify: true,
-        sourcemap: "linked",
-        define: {
-            "process.env.NODE_ENV": JSON.stringify("production"),
-        }
-    })
-])
+  Bun.build({
+    splitting: true,
+    entrypoints: ["./src/main.ts", ...(await api.withPromise())],
+    target: "bun",
+    outdir: "dist",
+    minify: true,
+    sourcemap: "linked",
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
+    plugins: [more_imports],
+  }),
+]);
 
-console.log("Build completed!")
+console.log("Build completed!");

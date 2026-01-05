@@ -1,3 +1,4 @@
+import type { BunPlugin } from "bun";
 import ky from "ky";
 
 /** https://bun.com/docs/bundler/loaders */
@@ -48,15 +49,20 @@ protocols.set("https:", (args) => {
 // todo opendal
 // todo 本地缓存
 
-Bun.plugin({
+export const more_imports: BunPlugin = {
   name: "more_imports",
   setup(build) {
     // 相对导入转换为绝对导入
     build.onResolve({ filter: /^(?:\/|\.\.?\/)/ }, ({ path, importer }) => {
-      const { protocol } = new URL(importer);
-      return protocols.has(protocol)
-        ? { path: new URL(path, importer).href }
-        : undefined;
+      try {
+        const { protocol } = new URL(importer);
+        return protocols.has(protocol)
+          ? { path: new URL(path, importer).href }
+          : undefined;
+      } catch (error) {
+        // importer cannot be parsed as URL
+        return undefined;
+      }
     });
 
     // 使用自定义方法解析指定协议导入
@@ -65,4 +71,6 @@ Bun.plugin({
       build.onLoad({ filter: /./, namespace }, (args) => callback(args));
     }
   },
-});
+};
+
+// Bun.plugin(more_imports);
