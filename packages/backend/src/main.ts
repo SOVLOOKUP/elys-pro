@@ -6,8 +6,8 @@ import { fdir } from "fdir";
 import cors from "@elysiajs/cors";
 
 const app_path = "./app_data";
-const root_domain = /.*\.metapoint\.tech:?\d*$/
-const frontend_origin = "https://elys.metapoint.tech"
+const root_domain = /.*\.metapoint\.tech:?\d*$/;
+const frontend_origin = "https://elys.metapoint.tech";
 
 await ensureDir(app_path);
 
@@ -24,173 +24,185 @@ const lsdir = async (path: string) => {
   return paths;
 };
 
-const mainApp = new Elysia().group("/app", (app) =>
-  app
-    .use(cors({
-      origin: [root_domain, /localhost:?\d*$/],
-    }))
-    .get("/", async () => lsdir(app_path))
-    .get("/:name", async ({ params }) => {
-      const project_path = resolve(app_path, params.name);
+const mainApp = new Elysia()
+  .group("/api", (app) =>
+    app
+      .use(
+        cors({
+          origin: [root_domain, /localhost:?\d*$/],
+        })
+      )
+      .get("/apps", async () => lsdir(app_path))
+      .group("/app", (app) =>
+        app
+          .get("/:name", async ({ params }) => {
+            const project_path = resolve(app_path, params.name);
 
-      if (!(await exists(project_path))) {
-        return new NotFoundError(`${project_path} not found`);
-      } else {
-        return lsdir(project_path);
-      }
-    })
-    .delete(
-      "/:name",
-      async ({ params, query }) => {
-        const project_path = resolve(
-          app_path,
-          params.name,
-          query.version === "all" ? "" : query.version
-        );
+            if (!(await exists(project_path))) {
+              return new NotFoundError(`${project_path} not found`);
+            } else {
+              return lsdir(project_path);
+            }
+          })
+          .delete(
+            "/:name",
+            async ({ params, query }) => {
+              const project_path = resolve(
+                app_path,
+                params.name,
+                query.version === "all" ? "" : query.version
+              );
 
-        if (!(await exists(project_path))) {
-          return status(404, "Project not found");
-        } else {
-          await rm(project_path, { recursive: true, force: true });
-          return { message: `${project_path} deleted` };
-        }
-      },
-      {
-        query: t.Object({
-          version: t.Union([t.String(), t.Literal("all")]),
-        }),
-      }
-    )
-    .post(
-      "/:name",
-      async ({ params, body, query }) => {
-        const project_path = resolve(app_path, params.name, query.version);
-        const index_path = resolve(project_path, "index.js");
-
-        if (await exists(project_path)) {
-          return status(403, "Project already exists");
-        } else {
-          await ensureDir(project_path);
-
-          if (body.file.type === "application/zip") {
-            const zipBuffer = await body.file.arrayBuffer();
-            const tempZipPath = resolve(project_path, "temp.zip");
-
-            await Bun.write(tempZipPath, zipBuffer);
-
-            const proc = Bun.spawn(["unzip", "-o", "temp.zip"], {
-              cwd: project_path,
-              stdout: "pipe",
-              stderr: "pipe",
-            });
-
-            await proc.exited;
-
-            await rm(tempZipPath, { force: true });
-          } else {
-            await Bun.write(index_path, body.file);
-          }
-
-          const validationResult = await new Promise<{
-            success: boolean;
-            error?: string;
-          }>((resolve) => {
-            const validator = new Worker(
-              join(import.meta.dir, "./workers/worker-validator.ts")
-            );
-
-            const timeout = setTimeout(() => {
-              validator.terminate();
-              resolve({ success: false, error: "Validation timeout" });
-            }, 5000);
-
-            validator.addEventListener("message", (event) => {
-              clearTimeout(timeout);
-              const message = event.data;
-
-              if (message.type === "validation-success") {
-                validator.terminate();
-                resolve({ success: true });
-              } else if (message.type === "validation-failed") {
-                validator.terminate();
-                resolve({ success: false, error: message.message });
-              } else if (message.type === "validation-error") {
-                validator.terminate();
-                resolve({ success: false, error: message.error });
+              if (!(await exists(project_path))) {
+                return status(404, "Project not found");
+              } else {
+                await rm(project_path, { recursive: true, force: true });
+                return { message: `${project_path} deleted` };
               }
-            });
+            },
+            {
+              query: t.Object({
+                version: t.Union([t.String(), t.Literal("all")]),
+              }),
+            }
+          )
+          .post(
+            "/:name",
+            async ({ params, body, query }) => {
+              const project_path = resolve(
+                app_path,
+                params.name,
+                query.version
+              );
+              const index_path = resolve(project_path, "index.js");
 
-            validator.addEventListener("error", (error) => {
-              clearTimeout(timeout);
-              validator.terminate();
-              resolve({ success: false, error: String(error) });
-            });
+              if (await exists(project_path)) {
+                return status(403, "Project already exists");
+              } else {
+                await ensureDir(project_path);
 
-            validator.postMessage({
-              type: "validate",
-              data: { modulePath: index_path },
-            });
-          });
+                if (body.file.type === "application/zip") {
+                  const zipBuffer = await body.file.arrayBuffer();
+                  const tempZipPath = resolve(project_path, "temp.zip");
 
-          if (!validationResult.success) {
-            await rm(project_path, { recursive: true, force: true });
-            return status(
-              400,
-              validationResult.error || "Invalid Elysia application"
-            );
-          }
+                  await Bun.write(tempZipPath, zipBuffer);
 
-          return { message: "Project uploaded and validated successfully" };
+                  const proc = Bun.spawn(["unzip", "-o", "temp.zip"], {
+                    cwd: project_path,
+                    stdout: "pipe",
+                    stderr: "pipe",
+                  });
+
+                  await proc.exited;
+
+                  await rm(tempZipPath, { force: true });
+                } else {
+                  await Bun.write(index_path, body.file);
+                }
+
+                const validationResult = await new Promise<{
+                  success: boolean;
+                  error?: string;
+                }>((resolve) => {
+                  const validator = new Worker(
+                    join(import.meta.dir, "./workers/worker-validator.ts")
+                  );
+
+                  const timeout = setTimeout(() => {
+                    validator.terminate();
+                    resolve({ success: false, error: "Validation timeout" });
+                  }, 5000);
+
+                  validator.addEventListener("message", (event) => {
+                    clearTimeout(timeout);
+                    const message = event.data;
+
+                    if (message.type === "validation-success") {
+                      validator.terminate();
+                      resolve({ success: true });
+                    } else if (message.type === "validation-failed") {
+                      validator.terminate();
+                      resolve({ success: false, error: message.message });
+                    } else if (message.type === "validation-error") {
+                      validator.terminate();
+                      resolve({ success: false, error: message.error });
+                    }
+                  });
+
+                  validator.addEventListener("error", (error) => {
+                    clearTimeout(timeout);
+                    validator.terminate();
+                    resolve({ success: false, error: String(error) });
+                  });
+
+                  validator.postMessage({
+                    type: "validate",
+                    data: { modulePath: index_path },
+                  });
+                });
+
+                if (!validationResult.success) {
+                  await rm(project_path, { recursive: true, force: true });
+                  return status(
+                    400,
+                    validationResult.error || "Invalid Elysia application"
+                  );
+                }
+
+                return {
+                  message: "Project uploaded and validated successfully",
+                };
+              }
+            },
+            {
+              body: t.Object({
+                file: t.File({
+                  name: t.String({
+                    pattern: "/$ ^.*.(js|zip)$/",
+                  }),
+                }),
+              }),
+              query: t.Object({
+                version: t.String(),
+              }),
+            }
+          )
+      )
+  )
+  .all(
+    "/app/:name/:version/*",
+    async (req) => {
+      if (req.params.version === "latest") {
+        const versions = await lsdir(resolve(app_path, req.params.name));
+        const latestVersion = maxSatisfying(versions, "*");
+        if (!latestVersion) {
+          return status(404, "No versions found");
         }
-      },
-      {
-        body: t.Object({
-          file: t.File({
-            name: t.String({
-              pattern: "/$ ^.*\.(js|zip)$/",
-            }),
-          }),
-        }),
-        query: t.Object({
-          version: t.String(),
-        }),
+        req.params.version = latestVersion;
       }
-    )
-    .all(
-      "/:name/:version/*",
-      async (req) => {
-        if (req.params.version === "latest") {
-          const versions = await lsdir(resolve(app_path, req.params.name));
-          const latestVersion = maxSatisfying(versions, "*");
-          if (!latestVersion) {
-            return status(404, "No versions found");
-          }
-          req.params.version = latestVersion;
-        }
 
-        const project_path = resolve(
-          app_path,
-          req.params.name,
-          req.params.version
-        );
-        const index_path = resolve(project_path, "index.js");
+      const project_path = resolve(
+        app_path,
+        req.params.name,
+        req.params.version
+      );
+      const index_path = resolve(project_path, "index.js");
 
-        if (!(await exists(index_path))) {
-          return status(404, "Project not found");
-        } else {
-          const workerModule = await import(index_path);
-          const app = new Elysia({
-            prefix: `/app/${req.params.name}/${req.params.version}`,
-          }).use(workerModule.app as Elysia);
+      if (!(await exists(index_path))) {
+        return status(404, "Project not found");
+      } else {
+        const workerModule = await import(index_path);
+        const app = new Elysia({
+          prefix: `/app/${req.params.name}/${req.params.version}`,
+        }).use(workerModule.app as Elysia);
 
-          return await app.handle(req.request);
-        }
-      },
-      {
-        parse: "none",
+        return await app.handle(req.request);
       }
-    )
-);
+    },
+    {
+      parse: "none",
+    }
+  );
 
 if (import.meta.main) {
   try {
@@ -200,9 +212,9 @@ if (import.meta.main) {
 
     mainApp
       .get("/", ({ request }) => {
-        const target = new URL(frontend_origin)
-        target.searchParams.set("backendURL", encodeURIComponent(request.url))
-        return Response.redirect(target.href, 302)
+        const target = new URL(frontend_origin);
+        target.searchParams.set("backendURL", encodeURIComponent(request.url));
+        return Response.redirect(target.href, 302);
       })
       .listen({ port: mainPort });
 

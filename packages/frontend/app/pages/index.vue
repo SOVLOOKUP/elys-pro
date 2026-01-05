@@ -22,7 +22,7 @@ const uploadForm = ref({
 async function loadApps() {
   loading.value = true
   try {
-    const { data } = await $elysia.app.get()
+    const { data } = await $elysia.api.apps.get()
     apps.value = data || []
   } catch (error) {
     toast.add({
@@ -39,7 +39,7 @@ async function loadApps() {
 async function loadVersions(appName: string) {
   loading.value = true
   try {
-    const { data } = await $elysia.app({ name: appName }).get()
+    const { data } = await $elysia.api.app({ name: appName }).get()
     versions.value = (data as string[]) || []
   } catch (error) {
     toast.add({
@@ -71,7 +71,7 @@ async function uploadApp() {
 
   loading.value = true
   try {
-    await $elysia.app({ name: uploadForm.value.name }).post(
+    await $elysia.api.app({ name: uploadForm.value.name }).post(
       { file: uploadForm.value.file },
       {
         query: {
@@ -115,7 +115,7 @@ async function deleteApp() {
 
   loading.value = true
   try {
-    await $elysia.app({ name: appToDeleteValue.name }).delete(undefined, {
+    await $elysia.api.app({ name: appToDeleteValue.name }).delete(undefined, {
       query: {
         version: appToDeleteValue.version
       }

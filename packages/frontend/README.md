@@ -99,11 +99,12 @@ packages/frontend/
 
 管理界面使用以下后端 API：
 
-- `GET /app` - 获取所有应用列表
-- `GET /app/:name` - 获取应用的所有版本
-- `POST /app/:name?version=xxx` - 上传应用
-- `DELETE /app/:name?version=xxx` - 删除应用版本
-- `DELETE /app/:name?version=all` - 删除应用所有版本
+- `GET /api` - 获取所有应用列表
+- `GET /api/:name` - 获取应用的所有版本
+- `POST /api/:name?version=xxx` - 上传应用
+- `DELETE /api/:name?version=xxx` - 删除应用版本
+- `DELETE /api/:name?version=all` - 删除应用所有版本
+
 - `ALL /app/:name/:version/*` - 访问应用
 
 ## 开发说明
