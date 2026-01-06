@@ -6,6 +6,7 @@
   "module": "src/client.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
+    "postinstall": "bun run postinstall.ts",
     "build": "bun run build.ts"
   },
   "type": "module",
@@ -18,6 +19,7 @@
     "fdir": "^6.5.0",
     "fs-extra": "^11.3.3",
     "ky": "^1.14.2",
+    "opendal": "^0.49.2",
     "semver": "^7.7.3"
   },
   "devDependencies": {
