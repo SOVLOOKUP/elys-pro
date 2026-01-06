@@ -1,19 +1,21 @@
 import { Operator } from "opendal";
-import { type OpendalSchema, schemas } from "./schema";
+import { schemas } from "./schema";
 import { addProtocol } from "..";
 
-const Op = async (scheme: OpendalSchema, options?: Record<string, string>) => {
-  const op = new Operator(scheme, options);
-  await op.check();
-  return op;
-};
-
 for (const schema of schemas) {
+  // http 已经有了
+  if (schema === "http") {
+    continue;
+  }
+
   addProtocol(schema, async (args) => {
-    // 从路径提取options
+    // 从路径提取 options
+    // https://docs.rs/opendal/latest/opendal/services/index.html
     const options = { todo: args.path };
 
-    const op = await Op(schema, options);
+    const op = new Operator(schema, options);
+
+    await op.check();
 
     const data = await op.read(args.path);
 
