@@ -38,7 +38,8 @@ type Contents =
   | undefined;
 
 const protocols = new Map<string, Bun.OnLoadCallback>();
-export const addProtocol = (
+
+const addProtocol = (
   protocol: string,
   callback: (args: Bun.OnLoadArgs) => Contents | Promise<Contents>
 ) => {
@@ -55,7 +56,6 @@ export const addProtocol = (
   });
 };
 
-import "./http";
-import "./opendal";
+await Promise.all([import("./http"), import("./opendal")]);
 
-export { protocols };
+export { protocols, addProtocol };
