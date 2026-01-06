@@ -1,6 +1,5 @@
-import { more_imports } from "./src/loader";
 import { fdir } from "fdir";
-import { copy, rm } from "fs-extra";
+import { rm } from "fs-extra";
 
 const api = new fdir({
   maxDepth: 0,
@@ -20,7 +19,6 @@ await Promise.all([
     define: {
       "process.env.NODE_ENV": JSON.stringify("production"),
     },
-    plugins: [more_imports],
   }),
 ]);
 

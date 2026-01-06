@@ -1,4 +1,4 @@
-import type { mainApp } from "./main";
+import type { mainApp } from "./server";
 import { treaty } from "@elysiajs/eden";
 
 export type AppRouter = typeof mainApp;
