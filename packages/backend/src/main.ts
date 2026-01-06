@@ -1,4 +1,4 @@
-import { Elysia, file, NotFoundError, status, t } from "elysia";
+import { Elysia, NotFoundError, status, t } from "elysia";
 import { join, resolve } from "path";
 import { maxSatisfying } from "semver";
 import { ensureDir, exists, rm } from "fs-extra";
