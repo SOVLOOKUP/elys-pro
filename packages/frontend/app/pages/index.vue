@@ -166,14 +166,15 @@ function handleFileChange(event: Event) {
 onMounted(() => {
   loadApps();
 });
+
+// 生成应用 URL 地址
+const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version}/`, useConfigStore().backendURL).href;
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
-    <div
-      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
-    >
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex items-center justify-between">
           <div>
@@ -199,34 +200,19 @@ onMounted(() => {
 
                 <UForm class="space-y-4">
                   <UFormField label="应用名称" required>
-                    <UInput
-                      v-model="uploadForm.name"
-                      placeholder="例如: my-app"
-                      icon="i-lucide-package"
-                    />
+                    <UInput v-model="uploadForm.name" placeholder="例如: my-app" icon="i-lucide-package" />
                   </UFormField>
 
                   <UFormField label="版本号" required>
-                    <UInput
-                      v-model="uploadForm.version"
-                      placeholder="例如: 1.0.0"
-                      icon="i-lucide-git-branch"
-                    />
+                    <UInput v-model="uploadForm.version" placeholder="例如: 1.0.0" icon="i-lucide-git-branch" />
                   </UFormField>
 
                   <UFormField label="应用文件" required>
                     <div class="space-y-2">
-                      <input
-                        type="file"
-                        accept=".js,.zip"
-                        @change="handleFileChange"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-400"
-                      />
+                      <input type="file" accept=".js,.zip" @change="handleFileChange"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-400" />
                       <p class="text-xs text-gray-500">支持 .js 或 .zip 文件</p>
-                      <p
-                        v-if="uploadForm.file"
-                        class="text-xs text-primary-600"
-                      >
+                      <p v-if="uploadForm.file" class="text-xs text-primary-600">
                         已选择: {{ uploadForm.file.name }}
                       </p>
                     </div>
@@ -235,11 +221,7 @@ onMounted(() => {
 
                 <template #footer>
                   <div class="flex justify-end gap-2">
-                    <UButton
-                      color="neutral"
-                      variant="ghost"
-                      @click="uploadModalOpen = false"
-                    >
+                    <UButton color="neutral" variant="ghost" @click="uploadModalOpen = false">
                       取消
                     </UButton>
                     <UButton :loading="loading" @click="uploadApp">
@@ -274,23 +256,14 @@ onMounted(() => {
             </div>
 
             <div v-else-if="apps.length === 0" class="text-center py-8">
-              <UIcon
-                name="i-lucide-package"
-                class="text-4xl text-gray-400 mb-2"
-              />
+              <UIcon name="i-lucide-package" class="text-4xl text-gray-400 mb-2" />
               <p class="text-sm text-gray-500">暂无应用</p>
             </div>
 
             <div v-else class="space-y-2">
-              <UButton
-                v-for="app in apps"
-                :key="app"
-                :variant="selectedApp === app ? 'soft' : 'ghost'"
-                :color="selectedApp === app ? 'primary' : 'neutral'"
-                block
-                class="justify-between"
-                @click="selectApp(app)"
-              >
+              <UButton v-for="app in apps" :key="app" :variant="selectedApp === app ? 'soft' : 'ghost'"
+                :color="selectedApp === app ? 'primary' : 'neutral'" block class="justify-between"
+                @click="selectApp(app)">
                 <span class="flex items-center gap-2">
                   <UIcon name="i-lucide-package" />
                   {{ app }}
@@ -315,13 +288,8 @@ onMounted(() => {
                   <UBadge color="primary" variant="subtle">
                     {{ versions.length }} 个版本
                   </UBadge>
-                  <UButton
-                    icon="i-lucide-trash-2"
-                    color="error"
-                    variant="ghost"
-                    size="sm"
-                    @click="confirmDelete(selectedApp, 'all')"
-                  >
+                  <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
+                    @click="confirmDelete(selectedApp, 'all')">
                     删除应用
                   </UButton>
                 </div>
@@ -329,10 +297,7 @@ onMounted(() => {
             </template>
 
             <div v-if="!selectedApp" class="text-center py-16">
-              <UIcon
-                name="i-lucide-arrow-left"
-                class="text-4xl text-gray-400 mb-2"
-              />
+              <UIcon name="i-lucide-arrow-left" class="text-4xl text-gray-400 mb-2" />
               <p class="text-sm text-gray-500">请从左侧选择一个应用</p>
             </div>
 
@@ -341,28 +306,16 @@ onMounted(() => {
             </div>
 
             <div v-else-if="versions.length === 0" class="text-center py-16">
-              <UIcon
-                name="i-lucide-git-branch"
-                class="text-4xl text-gray-400 mb-2"
-              />
+              <UIcon name="i-lucide-git-branch" class="text-4xl text-gray-400 mb-2" />
               <p class="text-sm text-gray-500">该应用暂无版本</p>
             </div>
 
             <div v-else class="space-y-3">
-              <UCard
-                v-for="version in versions"
-                :key="version"
-                :ui="{ body: 'p-4' }"
-              >
+              <UCard v-for="version in versions" :key="version" :ui="{ body: 'p-4' }">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
-                    <div
-                      class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg"
-                    >
-                      <UIcon
-                        name="i-lucide-git-branch"
-                        class="text-primary-500"
-                      />
+                    <div class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg">
+                      <UIcon name="i-lucide-git-branch" class="text-primary-500" />
                     </div>
                     <div>
                       <p class="font-medium">{{ version }}</p>
@@ -372,23 +325,12 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex gap-2">
-                    <UButton
-                      :to="`/app/${selectedApp}/${version}/`"
-                      target="_blank"
-                      icon="i-lucide-external-link"
-                      color="primary"
-                      variant="ghost"
-                      size="sm"
-                    >
+                    <UButton :to="appURL(version)" target="_blank" icon="i-lucide-external-link" color="primary"
+                      variant="ghost" size="sm">
                       访问
                     </UButton>
-                    <UButton
-                      icon="i-lucide-trash-2"
-                      color="error"
-                      variant="ghost"
-                      size="sm"
-                      @click="confirmDelete(selectedApp, version)"
-                    >
+                    <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
+                      @click="confirmDelete(selectedApp, version)">
                       删除
                     </UButton>
                   </div>
@@ -423,11 +365,7 @@ onMounted(() => {
 
           <template #footer>
             <div class="flex justify-end gap-2">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                @click="deleteModalOpen = false"
-              >
+              <UButton color="neutral" variant="ghost" @click="deleteModalOpen = false">
                 取消
               </UButton>
               <UButton color="error" :loading="loading" @click="deleteApp">

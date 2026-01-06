@@ -1,6 +1,12 @@
-import { defineStore } from 'pinia'
+import { defineStore } from "pinia";
 
-export const useConfigStore = defineStore('config', () => {
-    const backendURL = ref(useRequestURL().origin)
-    return { backendURL }
-})
+export const useConfigStore = defineStore(
+  "config",
+  () => {
+    const backendURL = ref(useRequestURL().origin);
+    return { backendURL };
+  },
+  {
+    persist: true,
+  }
+);
