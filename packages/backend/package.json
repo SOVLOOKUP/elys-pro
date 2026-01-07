@@ -7,24 +7,33 @@
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "postinstall": "bun run postinstall.ts",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "prisma:migrate": "bunx --bun prisma migrate dev --name",
+    "prisma:generate": "bunx --bun prisma generate",
+    "prisma:studio": "bunx --bun prisma studio"
   },
   "type": "module",
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/eden": "^1.4.6",
-    "@types/fs-extra": "^11.0.4",
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
     "elysia": "^1.4.21",
     "es-toolkit": "^1.43.0",
     "fdir": "^6.5.0",
     "fs-extra": "^11.3.3",
     "ky": "^1.14.2",
     "opendal": "^0.49.2",
+    "pg": "^8.16.3",
     "semver": "^7.7.3"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/semver": "^7.7.1"
+    "@types/fs-extra": "^11.0.4",
+    "@types/pg": "^8.16.0",
+    "@types/semver": "^7.7.1",
+    "prisma": "^7.2.0",
+    "prismabox": "^1.1.26"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
