@@ -6,12 +6,12 @@
   "module": "src/client.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
-    "postinstall": "bun run postinstall.ts",
     "build": "bun run build.ts",
     "dbupdate": "bun prisma:migrate && bun prisma:generate",
+    "prisma:studio": "bunx --bun prisma studio",
+    "postinstall": "bun run postinstall.ts",
     "prisma:migrate": "bunx --bun prisma migrate dev --name",
-    "prisma:generate": "bunx --bun prisma generate",
-    "prisma:studio": "bunx --bun prisma studio"
+    "prisma:generate": "bunx --bun prisma generate"
   },
   "type": "module",
   "dependencies": {
