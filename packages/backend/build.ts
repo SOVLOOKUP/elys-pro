@@ -1,5 +1,6 @@
 import { fdir } from "fdir";
 import { copy, rm } from "fs-extra";
+import { fixOpendalPlugin } from "./fix-opendal";
 
 const api = new fdir({
   maxDepth: 0,
@@ -16,6 +17,7 @@ await Promise.all([
     outdir: "dist",
     minify: true,
     sourcemap: "linked",
+    plugins: [fixOpendalPlugin],
   }),
   copy("prisma", "dist/prisma"),
 ]);

@@ -1,7 +1,7 @@
 // 若没有 redis 则用 sqlite 缓存
 import Keyv, { type KeyvStoreAdapter } from "keyv";
 import KeyvGzip from "@keyv/compress-gzip";
-import KeyvFile from "keyv-file";
+import { KeyvFile } from "keyv-file";
 import KeyvValkey from "@keyv/valkey";
 
 let store: KeyvStoreAdapter;

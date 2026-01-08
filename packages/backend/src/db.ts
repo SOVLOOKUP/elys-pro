@@ -1,5 +1,5 @@
 import { PrismaClient } from "./generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaBunSqlite } from "prisma-adapter-bun-sqlite";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { SqlDriverAdapterFactory } from "@prisma/client/runtime/client";
 // @ts-ignore
@@ -9,17 +9,26 @@ import { resolve } from "path";
 import { ensureDir } from "fs-extra";
 
 const rootDir = resolve(import.meta.dir, "..");
-const databaseUrl = Bun.env.DATABASE_URL;
+
+let databaseUrl: string;
+
+// If no DATABASE_URL environment variable is set, use a local SQLite database
+if (!Bun.env.DATABASE_URL) {
+  const dataDir = resolve(rootDir, "data");
+  await ensureDir(dataDir);
+  databaseUrl = `file:${resolve(dataDir, "data.db")}`;
+} else {
+  databaseUrl = Bun.env.DATABASE_URL;
+}
 
 let adapter: SqlDriverAdapterFactory;
 
+// Determine the database adapter based on the DATABASE_URL environment variable
 if (databaseUrl?.startsWith("postgres")) {
   adapter = new PrismaPg({ connectionString: databaseUrl });
 } else {
-  const dataDir = resolve(rootDir, "data");
-  await ensureDir(dataDir);
-  adapter = new PrismaLibSql({
-    url: databaseUrl ?? `file:${resolve(dataDir, "data.db")}`,
+  adapter = new PrismaBunSqlite({
+    url: databaseUrl,
   });
 }
 
