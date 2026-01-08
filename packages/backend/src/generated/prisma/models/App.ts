@@ -1025,7 +1025,6 @@ export type AppCreateManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * The data used to create many Apps.
    */
   data: Prisma.AppCreateManyInput | Prisma.AppCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1044,7 +1043,6 @@ export type AppCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions.
    * The data used to create many Apps.
    */
   data: Prisma.AppCreateManyInput | Prisma.AppCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

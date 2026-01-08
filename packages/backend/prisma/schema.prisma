@@ -12,7 +12,7 @@ generator prismabox {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model App {
