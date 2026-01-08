@@ -1,108 +1,184 @@
-# elys-pro
+# <img src="./images/logo.svg" width="30" height="30" align="top"> elys-pro
 
-基于 Elysia 的部署神器
+> 基于 Elysia 的现代化部署神器，为 Elysia 应用提供高效的部署与管理解决方案
 
-快捷部署 Elysia 应用，并实现对应用的高效管理
+<p align="center">
+  <a href="#特性">特性</a> •
+  <a href="#快速开始">快速开始</a> •
+  <a href="#安装">安装</a> •
+  <a href="#开发">开发</a> •
+  <a href="#贡献">贡献</a>
+</p>
 
-支持应用版本管理
+<p align="center">
+  <img src="https://img.shields.io/badge/built%20with-elysia-24292e?style=for-the-badge" alt="Built with Elysia">
+  <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+</p>
 
-## 项目结构
+## ✨ 特性
 
-```
-elys-pro/
-├── packages/
-│   ├── backend/          # 后端服务
-│   │   ├── src/
-│   │   │   ├── main.ts     # 主服务器
-│   │   │   └── workers/    # Worker 相关
-│   │   └── dist/           # 构建产物
-│   └── frontend/         # 前端管理界面
-│       └── app/
-│           └── pages/
-│               └── index.vue # 管理界面
-├── Dockerfile            # Docker 配置
-├── .dockerignore         # Docker 忽略文件
-├── docker-build.sh       # 构建脚本
-└── .github/workflows/
-    └── docker.yml        # GitHub Actions
-```
+| 特性               | 描述                                 |
+| ------------------ | ------------------------------------ |
+| 🚀 **快速部署**    | 一键部署 Elysia 应用，简化部署流程   |
+| 📦 **版本管理**    | 支持应用版本管理，轻松回滚和更新     |
+| 🐳 **Docker 支持** | 完整的容器化部署方案，保证环境一致性 |
+| 🎨 **优雅界面**    | 直观的管理界面，轻松监控和管理应用   |
+| 🔒 **Worker 隔离** | 安全的 Worker 隔离机制，保障应用安全 |
+| 💻 **多架构支持**  | 支持 AMD64/ARM64 等多种架构部署      |
 
-## 开发运行
+## 🚀 快速开始
 
-### 后端服务
+### 系统要求
 
-```bash
-cd packages/backend
-bun run dev
-```
+- [Bun](https://bun.sh/) >= 1.0
+- Docker (可选，用于容器化部署)
 
-### 前端界面
+### 默认配置
 
-```bash
-cd packages/frontend
-bun run dev
-```
+elys-pro 默认使用以下配置，无需额外设置：
 
-## Docker 部署
+- **数据库**: SQLite
+- **缓存**: 文件系统缓存
+- **数据库文件**: `/app/data/sqlite.db`
+- **缓存文件**: `${os.tmpdir()}/keyv-file/default.json`
 
-### 本地构建
+## 📦 安装
 
-```bash
-# 构建后端
-cd packages/backend
-bun run build
+### 容器化部署 (推荐)
 
-# 构建 Docker 镜像
-docker build -t elys-pro:latest .
-```
+> 容器端口: `3000`
 
-或者使用构建脚本：
+#### 使用 Podman
 
 ```bash
-./docker-build.sh
+podman run -d \
+  --name elys-pro \
+  -p 3000:3000 \
+  -v ./data:/app/data \
+  ghcr.io/sovlookup/elys-pro:latest
 ```
 
-### 运行容器
+#### 使用 Docker
 
 ```bash
-docker run -d -p 3000:3000 --name elys-pro elys-pro:latest
+docker run -d \
+  --name elys-pro \
+  -p 3000:3000 \
+  -v ./data:/app/data \
+  ghcr.io/sovlookup/elys-pro:latest
 ```
 
-## GitHub Actions 自动化
+#### 国内加速
 
-项目包含 GitHub Actions 配置，当代码推送到 main 或 master 分支时，会自动：
+```bash
+docker run -d \
+  --name elys-pro \
+  -p 3000:3000 \
+  -v ./data:/app/data \
+  ghcr.1ms.run/sovlookup/elys-pro:latest
+```
 
-1. 拉取代码
-2. 安装 Bun 依赖
-3. 构建后端应用
-4. 构建 Docker 镜像
-5. 推送到 GitHub Container Registry (ghcr.io)
+### 高级部署 (PostgreSQL + Valkey)
 
-### 镜像仓库
+如需使用更强大的数据库和缓存，可以使用以下配置：
 
-构建的镜像会推送到：`ghcr.io/{username}/elys-pro`
+```yaml
+version: "3.8"
 
-### 触发条件
+services:
+  elys-pro:
+    container_name: elys-pro
+    image: ghcr.io/sovlookup/elys-pro:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://user:pass@localhost:5432/dbname
+      - VALKEY_URL=redis://user:pass@localhost:6379
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+```
 
-- 推送 `main` 或 `master` 分支
-- 提交 Pull Request
+## 使用
 
-## 环境变量
+访问 [http://localhost:3000](http://localhost:3000) 即可使用。
 
-- `NODE_ENV`: 运行环境 (默认: production)
-- `MAIN_PORT`: 主服务器端口 (默认: 3000)
+## 🛠️ 开发
 
-## 特性
+### 环境准备
 
-- ✨ 快速部署 Elysia 应用
-- 📦 支持应用版本管理
-- 🚀 Docker 容器化部署
-- 🔄 GitHub Actions 自动化
-- 🎨 优雅的管理界面
-- 🔒 安全的 Worker 隔离
-- 💻 多架构支持 (AMD64/ARM64)
+1. 克隆项目
 
-<!-- 缩放模式（多请求1worker 超时无请求自动kill 可设置超时时间） -->
-<!-- websocket支持 -->
-<!-- 插件支持 -->
-<!-- 日志收集 -->
+   ```bash
+   git clone <repository-url>
+   cd elys-pro
+   ```
+
+2. 安装依赖
+
+   ```bash
+   bun install
+   ```
+
+3. 初始化数据库
+   ```bash
+   cd packages/backend
+   bun run prisma:migrate:dev
+   ```
+
+### 开发模式
+
+| 模式                  | 命令                              | 描述                       |
+| --------------------- | --------------------------------- | -------------------------- |
+| 🔄 **前后端协同开发** | `bun dev`                         | 同时启动前端和后端进行开发 |
+| ⚡ **仅后端服务**     | `cd packages/backend && bun dev`  | 仅启动后端服务进行开发     |
+| 🌐 **仅前端界面**     | `cd packages/frontend && bun dev` | 仅启动前端界面进行开发     |
+
+### 构建
+
+| 目标              | 命令                                    |
+| ----------------- | --------------------------------------- |
+| 📦 **完整构建**   | `bun run build`                         |
+| ⚡ **仅后端构建** | `cd packages/backend && bun run build`  |
+| 🌐 **仅前端构建** | `cd packages/frontend && bun run build` |
+
+## 🤝 贡献
+
+我们欢迎各种形式的贡献！如果您想为项目做出贡献，请按照以下步骤操作：
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+### 开发规范
+
+- 代码风格遵循 ESLint 和 Prettier 规则
+- 提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范
+- 所有功能应包含相应的测试
+
+## 📄 许可证
+
+本项目采用 [MIT 许可证](LICENSE)。详情请参阅 [LICENSE](LICENSE) 文件。
+
+## 🖼️ 使用示例
+
+<div align="center">
+  
+  [_界面预览_](https://elys.metapoint.tech/)
+  
+</div>
+
+## 🙏 致谢
+
+- 感谢 [Elysia](https://elysiajs.com/) 提供了出色的框架
+- 感谢 [Nuxt](https://nuxt.com/) 为前端提供强大的支持
+- 感谢所有为项目做出贡献的开发者
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/sovlookup">sovlookup</a>
+</p>

@@ -6,17 +6,20 @@ import type { SqlDriverAdapterFactory } from "@prisma/client/runtime/client";
 import { MigrateDeploy } from "@prisma/migrate";
 import { type PrismaConfig } from "prisma/config";
 import { resolve } from "path";
+import { ensureDir } from "fs-extra";
 
 const rootDir = resolve(import.meta.dir, "..");
 const databaseUrl = Bun.env.DATABASE_URL;
 
 let adapter: SqlDriverAdapterFactory;
 
-if (databaseUrl?.startsWith("postgres:")) {
+if (databaseUrl?.startsWith("postgres")) {
   adapter = new PrismaPg({ connectionString: databaseUrl });
 } else {
+  const dataDir = resolve(rootDir, "data");
+  await ensureDir(dataDir);
   adapter = new PrismaLibSql({
-    url: databaseUrl ?? `file:${resolve(rootDir, "data.db")}`,
+    url: databaseUrl ?? `file:${resolve(dataDir, "data.db")}`,
   });
 }
 
