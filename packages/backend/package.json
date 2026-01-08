@@ -6,7 +6,7 @@
   "module": "src/client.ts",
   "scripts": {
     "dev": "bun run --hot src/main.ts",
-    "build": "bun run build.ts",
+    "build": "bun run build/index.ts",
     "dbupdate": "bun prisma:migrate && bun prisma:generate",
     "prisma:studio": "bunx --bun prisma studio",
     "opendal": "bun run opendalSchema.ts",

@@ -205,8 +205,6 @@ const startServer = async () => {
   try {
     const mainPort = parseInt(Bun.env.MAIN_PORT || "3000");
 
-    console.log(`Attempting to start server on port ${mainPort}...`);
-
     mainApp
       // 携带后端地址跳转到前端
       .get("/", ({ request }) => {
