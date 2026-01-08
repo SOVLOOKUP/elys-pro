@@ -1,9 +1,17 @@
 // 若没有 redis 则用 sqlite 缓存
-import Keyv from "keyv";
+import Keyv, { type KeyvStoreAdapter } from "keyv";
 import KeyvGzip from "@keyv/compress-gzip";
-import KeyvSqlite from "@keyv/sqlite";
+import KeyvFile from "keyv-file";
+import KeyvValkey from "@keyv/valkey";
 
-const store = new KeyvSqlite(Bun.env.DATABASE_URL);
+let store: KeyvStoreAdapter;
+
+if (Bun.env.VALKEY_URL) {
+  store = new KeyvValkey(Bun.env.VALKEY_URL);
+} else {
+  store = new KeyvFile();
+}
+
 const keyv = new Keyv({ store, compression: new KeyvGzip() });
 
 // 缓存模块

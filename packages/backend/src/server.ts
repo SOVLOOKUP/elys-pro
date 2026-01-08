@@ -203,7 +203,7 @@ const mainApp = new Elysia()
 
 const startServer = async () => {
   try {
-    const mainPort = parseInt(process.env.MAIN_PORT || "3000");
+    const mainPort = parseInt(Bun.env.MAIN_PORT || "3000");
 
     console.log(`Attempting to start server on port ${mainPort}...`);
 

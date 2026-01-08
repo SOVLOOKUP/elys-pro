@@ -2,12 +2,13 @@ import { PrismaClient } from "./generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { SqlDriverAdapterFactory } from "@prisma/client/runtime/client";
+// @ts-ignore
+import { MigrateDeploy } from "@prisma/migrate";
+import { type PrismaConfig } from "prisma/config";
+import { resolve } from "path";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is not set");
-}
+const rootDir = resolve(import.meta.dir, "..");
+const databaseUrl = Bun.env.DATABASE_URL;
 
 let adapter: SqlDriverAdapterFactory;
 
@@ -15,14 +16,9 @@ if (databaseUrl?.startsWith("postgres:")) {
   adapter = new PrismaPg({ connectionString: databaseUrl });
 } else {
   adapter = new PrismaLibSql({
-    url: databaseUrl,
+    url: databaseUrl ?? `file:${resolve(rootDir, "data.db")}`,
   });
 }
-
-// @ts-ignore
-import { MigrateDeploy } from "@prisma/migrate";
-import { type PrismaConfig } from "prisma/config";
-import { resolve } from "path";
 
 const migrateDeploy = async (
   baseDir: string,
@@ -30,17 +26,8 @@ const migrateDeploy = async (
 ): Promise<void> =>
   await MigrateDeploy.new().parse(["migrate", "deploy"], config, baseDir);
 
-const rootDir = resolve(import.meta.dir, "..");
-
 // 自动 migrate 数据库
 await migrateDeploy(rootDir, {
-  experimental: {
-    // 外部表
-    externalTables: true,
-  },
-  // tables: {
-  //   external: ["public.users"],
-  // },
   schema: resolve(rootDir, "prisma/schema.prisma"),
   migrations: {
     path: resolve(rootDir, "prisma/migrations"),

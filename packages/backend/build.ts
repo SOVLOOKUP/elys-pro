@@ -1,5 +1,5 @@
 import { fdir } from "fdir";
-import { rm } from "fs-extra";
+import { copy, rm } from "fs-extra";
 
 const api = new fdir({
   maxDepth: 0,
@@ -16,10 +16,8 @@ await Promise.all([
     outdir: "dist",
     minify: true,
     sourcemap: "linked",
-    define: {
-      "process.env.NODE_ENV": JSON.stringify("production"),
-    },
   }),
+  copy("prisma", "dist/prisma"),
 ]);
 
 console.log("Build completed!");
