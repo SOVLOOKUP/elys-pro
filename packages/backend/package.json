@@ -31,13 +31,13 @@
     "semver": "^7.7.3"
   },
   "devDependencies": {
-    "fdir": "^6.5.0",
-    "fs-extra": "^11.3.3",
     "@types/bun": "latest",
     "@types/fs-extra": "^11.0.4",
     "@types/pg": "^8.16.0",
     "@types/semver": "^7.7.1",
     "css-select": "^6.0.0",
+    "fdir": "^6.5.0",
+    "fs-extra": "^11.3.3",
     "htmlparser2": "^10.0.0",
     "prisma": "^7.2.0",
     "prismabox": "^1.1.26"
