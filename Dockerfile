@@ -6,9 +6,6 @@ WORKDIR /app
 # 复制构建产物
 COPY packages/backend/dist /app
 
-# 安装 unzip 工具（用于解压上传的 zip 文件）
-RUN apk add --no-cache unzip
-
 # 暴露端口
 EXPOSE 3000
 

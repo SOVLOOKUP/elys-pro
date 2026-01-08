@@ -20,7 +20,7 @@ export const more_imports: BunPlugin = {
     // 使用自定义方法解析指定协议导入
     for (const [protocol, callback] of protocols) {
       const namespace = protocol.replace(":", "");
-      // todo 本地缓存
+      // todo 本地缓存模块
       build.onLoad({ filter: /./, namespace }, (args) => callback(args));
     }
   },
