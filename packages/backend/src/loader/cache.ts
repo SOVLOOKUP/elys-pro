@@ -1,10 +1,10 @@
 // 若没有 redis 则用 sqlite 缓存
 import Keyv from "keyv";
-import KeyvLz4 from "@keyv/compress-lz4";
+import KeyvGzip from "@keyv/compress-gzip";
 import KeyvSqlite from "@keyv/sqlite";
 
 const store = new KeyvSqlite(Bun.env.DATABASE_URL);
-const keyv = new Keyv({ store, compression: new KeyvLz4() });
+const keyv = new Keyv({ store, compression: new KeyvGzip() });
 
 // 缓存模块
 export const getCacheIfExistNorSet = async (

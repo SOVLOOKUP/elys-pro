@@ -19,6 +19,6 @@ if (databaseUrl?.startsWith("postgres:")) {
   });
 }
 
-// todo 自动 migrate 数据库
+// todo 自动 migrate 数据库 @prisma/migrate
 
 export const prisma = new PrismaClient({ adapter });
