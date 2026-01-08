@@ -9,7 +9,7 @@
     "build": "bun run build.ts",
     "dbupdate": "bun prisma:migrate && bun prisma:generate",
     "prisma:studio": "bunx --bun prisma studio",
-    "postinstall": "bun run postinstall.ts",
+    "opendal": "bun run opendalSchema.ts",
     "prisma:migrate": "bunx --bun prisma migrate dev --name",
     "prisma:generate": "bunx --bun prisma generate"
   },
@@ -33,6 +33,8 @@
     "@types/fs-extra": "^11.0.4",
     "@types/pg": "^8.16.0",
     "@types/semver": "^7.7.1",
+    "css-select": "^6.0.0",
+    "htmlparser2": "^10.0.0",
     "prisma": "^7.2.0",
     "prismabox": "^1.1.26"
   },

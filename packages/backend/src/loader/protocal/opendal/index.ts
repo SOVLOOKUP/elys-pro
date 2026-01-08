@@ -1,6 +1,7 @@
 import { Operator } from "opendal";
 import { schemas, type OpendalSchema } from "./schema";
 import { addProtocol } from "..";
+import type { OpendalOption } from "./options";
 
 // 使用 base64 将 options 编码
 const encodeOptions = (options: Record<string, string>) => {
@@ -9,8 +10,27 @@ const encodeOptions = (options: Record<string, string>) => {
   return btoa(JSON.stringify(opts.toJSON()));
 };
 
-const decodeOptions = (encodedOptions: string) =>
-  JSON.parse(atob(encodedOptions));
+const decodeOptions = (encodedOptions: string) => {
+  // 将所有 value 转换为 string
+  const optionsStr: Record<string, string> = {};
+  const decoded: Record<string, any> = JSON.parse(
+    atob(encodedOptions)
+  ) as OpendalOption;
+
+  // 将所有 value 转换为 string
+  for (const key in decoded) {
+    if (Object.prototype.hasOwnProperty.call(decoded, key)) {
+      const value = decoded[key];
+      if (typeof value === "string") {
+        optionsStr[key] = value;
+      } else {
+        optionsStr[key] = JSON.stringify(value);
+      }
+    }
+  }
+
+  return optionsStr;
+};
 
 // 构造新的 Opendal URL，将 options 构造到 URL host 中
 export const newURL = (
