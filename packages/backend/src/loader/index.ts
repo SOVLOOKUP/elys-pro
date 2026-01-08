@@ -1,5 +1,6 @@
 import type { BunPlugin } from "bun";
 import { protocols } from "./protocal";
+import { getCacheIfExistNorSet } from "./cache";
 
 export const more_imports: BunPlugin = {
   name: "more_imports",
@@ -20,8 +21,9 @@ export const more_imports: BunPlugin = {
     // 使用自定义方法解析指定协议导入
     for (const [protocol, callback] of protocols) {
       const namespace = protocol.replace(":", "");
-      // todo 本地缓存模块
-      build.onLoad({ filter: /./, namespace }, (args) => callback(args));
+      build.onLoad({ filter: /./, namespace }, (args) =>
+        getCacheIfExistNorSet(args, callback)
+      );
     }
   },
 };
