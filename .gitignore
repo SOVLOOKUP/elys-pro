@@ -11,3 +11,4 @@ dist/
 /packages/backend/app_data/
 coverage/
 **/*.db
+arms_cache/**
