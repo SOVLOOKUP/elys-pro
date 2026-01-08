@@ -1,5 +1,7 @@
 import { PrismaClient } from "./generated/prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaPg } from "@prisma/adapter-pg";
+import type { SqlDriverAdapterFactory } from "@prisma/client/runtime/client";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -7,5 +9,14 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set");
 }
 
-const adapter = new PrismaPg({ connectionString: databaseUrl });
+let adapter: SqlDriverAdapterFactory;
+
+if (databaseUrl?.startsWith("postgres:")) {
+  adapter = new PrismaPg({ connectionString: databaseUrl });
+} else {
+  adapter = new PrismaLibSql({
+    url: databaseUrl,
+  });
+}
+
 export const prisma = new PrismaClient({ adapter });
