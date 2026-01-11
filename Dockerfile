@@ -12,7 +12,7 @@ FROM base AS amd64-stage
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "amd64" ] ; then \
     echo "Setting AMD64-specific optimizations" && \
-    rm -f dist/*linux-musl-arm64-openssl-3.0.x && \
+    rm -f dist/schema-engine-linux-musl-arm64-openssl-3.0.x && \
     true ; \
   fi
 
@@ -20,7 +20,7 @@ FROM base AS arm64-stage
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ] ; then \
     echo "Setting ARM64-specific optimizations" && \
-    rm -f dist/*linux-musl-openssl-3.0.x && \
+    rm -f dist/schema-engine-linux-musl-openssl-3.0.x && \
     true ; \
   fi
 
