@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 
-// 创建一个 Bun 插件来修复 @prisma/prisma-schema-wasm 依赖的 WASM 文件加载问题
+// Bun 插件：修复 @prisma/prisma-schema-wasm 依赖的 WASM 文件加载问题
 export const fixPrismaWasmPlugin: BunPlugin = {
   name: "fix-prisma-wasm",
   setup(build) {

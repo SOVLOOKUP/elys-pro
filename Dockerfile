@@ -1,7 +1,7 @@
 FROM oven/bun:alpine
 
 # 设置工作目录
-WORKDIR /app
+WORKDIR /app/src
 
 # 复制构建产物
 COPY packages/backend/dist /app
@@ -14,4 +14,4 @@ ENV NODE_ENV=production
 ENV MAIN_PORT=3000
 
 # 启动应用
-CMD ["bun", "run", "src/main.js"]
+CMD ["bun", "run", "main.js"]

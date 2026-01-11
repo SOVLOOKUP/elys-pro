@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 
-// 创建一个 Bun 插件来修复 opendal 的 require 重新分配问题
+// Bun插件：修复 opendal 的 require 重新分配问题
 export const fixOpendalPlugin: BunPlugin = {
   name: "fix-opendal",
   setup(build) {
