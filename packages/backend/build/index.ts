@@ -45,6 +45,7 @@ await Promise.all([
     entrypoints: ["./src/main.ts", ...(await api.withPromise())],
     target: "bun",
     outdir: "dist",
+    // action 编译注入环境变量
     define: inAction
       ? {
           PRISMA_SCHEMA_ENGINE_BINARY: `(await import("os")).arch() === "arm64" ? "${paths![
