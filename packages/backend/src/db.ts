@@ -10,21 +10,24 @@ import { ensureDir } from "fs-extra";
 
 const rootDir = resolve(import.meta.dir, "..");
 
+let databaseUrl: string;
+let adapter: SqlDriverAdapterFactory;
+
 // If no DATABASE_URL environment variable is set, use a local SQLite database
 if (!Bun.env.DATABASE_URL) {
   const dataDir = resolve(rootDir, "data");
   await ensureDir(dataDir);
-  Bun.env.DATABASE_URL = `file:${resolve(dataDir, "data.db")}`;
+  databaseUrl = `file:${resolve(dataDir, "data.db")}`;
+} else {
+  databaseUrl = Bun.env.DATABASE_URL;
 }
 
-let adapter: SqlDriverAdapterFactory;
-
 // Determine the database adapter based on the DATABASE_URL environment variable
-if (Bun.env.DATABASE_URL.startsWith("postgres")) {
-  adapter = new PrismaPg({ connectionString: Bun.env.DATABASE_URL });
+if (databaseUrl?.startsWith("postgres")) {
+  adapter = new PrismaPg({ connectionString: databaseUrl });
 } else {
   adapter = new PrismaBunSqlite({
-    url: Bun.env.DATABASE_URL,
+    url: databaseUrl,
   });
 }
 
@@ -41,7 +44,7 @@ await migrateDeploy(rootDir, {
     path: resolve(rootDir, "prisma/migrations"),
   },
   datasource: {
-    url: Bun.env.DATABASE_URL,
+    url: databaseUrl,
   },
 });
 
