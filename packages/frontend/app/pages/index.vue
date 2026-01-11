@@ -1,15 +1,22 @@
 <script setup lang="ts">
+import { type AppModel } from 'elys-pro-backend/src/generated/prisma/internal/prismaNamespace';
+
 const { $elysia } = useNuxtApp();
 const toast = useToast();
 
 // 状态管理
-const apps = ref<string[]>([]);
+const apps = ref<AppModel[]>([]);
 const selectedApp = ref<string | null>(null);
 const versions = ref<string[]>([]);
 const loading = ref(false);
 const uploadModalOpen = ref(false);
 const deleteModalOpen = ref(false);
 const appToDelete = ref<{ name: string; version: string | "all" } | null>(null);
+
+// 请求状态
+const lastRequestStatus = ref<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+const config = useConfigStore()
 
 // 上传表单
 const uploadForm = ref({
@@ -21,15 +28,18 @@ const uploadForm = ref({
 // 加载应用列表
 async function loadApps() {
   loading.value = true;
+  lastRequestStatus.value = 'loading';
   try {
     const { data } = await $elysia.api.apps.get();
     apps.value = data || [];
+    lastRequestStatus.value = 'success';
   } catch (error) {
     toast.add({
       title: "加载失败",
       description: "无法获取应用列表",
       color: "warning",
     });
+    lastRequestStatus.value = 'error';
   } finally {
     loading.value = false;
   }
@@ -40,7 +50,18 @@ async function loadVersions(appName: string) {
   loading.value = true;
   try {
     const { data } = await $elysia.api.app({ name: appName }).get();
-    versions.value = (data as string[]) || [];
+    // 根据API实际返回的数据结构处理版本信息
+    if (Array.isArray(data)) {
+      // 如果API返回的是对象数组，则从中提取版本号
+      if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'version' in data[0]) {
+        versions.value = data.map((item: any) => item.version) || [];
+      } else {
+        // 如果API返回的是字符串数组，则直接使用
+        versions.value = data as unknown as string[] || [];
+      }
+    } else {
+      versions.value = [];
+    }
   } catch (error) {
     toast.add({
       title: "加载失败",
@@ -53,7 +74,9 @@ async function loadVersions(appName: string) {
 }
 
 // 选择应用
-function selectApp(appName: string) {
+function selectApp(app: AppModel | string) {
+  // 如果传入的是 AppData 对象，则使用其 name 属性
+  const appName = typeof app === 'string' ? app : app.name;
   selectedApp.value = appName;
   loadVersions(appName);
 }
@@ -75,8 +98,9 @@ async function uploadApp() {
 
   loading.value = true;
   try {
+    // 使用类型断言避免类型错误，实际API结构可能需要后端定义
     await $elysia.api.app({ name: uploadForm.value.name }).post(
-      { file: uploadForm.value.file },
+      { file: uploadForm.value.file } as any,
       {
         query: {
           version: uploadForm.value.version,
@@ -119,7 +143,8 @@ async function deleteApp() {
 
   loading.value = true;
   try {
-    await $elysia.api.app({ name: appToDeleteValue.name }).delete(undefined, {
+    // 使用类型断言避免类型错误，实际API结构可能需要后端定义
+    await $elysia.api.app({ name: appToDeleteValue.name }).delete(undefined as any, {
       query: {
         version: appToDeleteValue.version,
       },
@@ -261,12 +286,12 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
             </div>
 
             <div v-else class="space-y-2">
-              <UButton v-for="app in apps" :key="app" :variant="selectedApp === app ? 'soft' : 'ghost'"
-                :color="selectedApp === app ? 'primary' : 'neutral'" block class="justify-between"
+              <UButton v-for="app in apps" :key="app.name" :variant="selectedApp === app.name ? 'soft' : 'ghost'"
+                :color="selectedApp === app.name ? 'primary' : 'neutral'" block class="justify-between"
                 @click="selectApp(app)">
                 <span class="flex items-center gap-2">
                   <UIcon name="i-lucide-package" />
-                  {{ app }}
+                  {{ app.name }}
                 </span>
                 <UIcon name="i-lucide-chevron-right" />
               </UButton>
