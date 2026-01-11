@@ -54,7 +54,7 @@ jobs:
           type=sha,prefix={{branch}}-
           latest
 
-    - name: Build and push Docker image
+    - name: Build and push multi-platform Docker image
       uses: docker/build-push-action@v5
       with:
         context: .

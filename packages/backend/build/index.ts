@@ -1,5 +1,5 @@
 import { fdir } from "fdir";
-import { copy, rm } from "fs-extra";
+import { copy, ensureDir, rm } from "fs-extra";
 import { fixOpendalPlugin } from "./fix-opendal";
 import { fixPrismaWasmPlugin } from "./fix-prisma";
 import {
@@ -17,12 +17,16 @@ const api = new fdir({
 }).crawl("./src/workers");
 
 await rm("dist", { recursive: true, force: true });
+await ensureDir("dist");
+
+let paths: Record<string, string>;
+
+const binaryTargets: DownloadOptions["binaryTargets"] = [
+  "linux-musl-openssl-3.0.x",
+  "linux-musl-arm64-openssl-3.0.x",
+];
 
 if (inAction) {
-  const binaryTargets: DownloadOptions["binaryTargets"] = [
-    "linux-musl-openssl-3.0.x",
-    "linux-musl-arm64-openssl-3.0.x",
-  ];
   const out = await download({
     binaries: {
       [BinaryType.SchemaEngineBinary]: "dist",
@@ -32,10 +36,7 @@ if (inAction) {
     version: prismaVersion.engine,
   });
 
-  const platform = out[BinaryType.SchemaEngineBinary]!;
-
-  process.env.PRISMA_SCHEMA_ENGINE_BINARY = platform[binaryTargets![0]!];
-  process.env.PRISMA_SCHEMA_ENGINE_BINARY_ARM = platform[binaryTargets![1]!];
+  paths = out[BinaryType.SchemaEngineBinary]!;
 }
 
 await Promise.all([
@@ -44,7 +45,16 @@ await Promise.all([
     entrypoints: ["./src/main.ts", ...(await api.withPromise())],
     target: "bun",
     outdir: "dist",
-    env: "PRISMA_SCHEMA_*",
+    define: inAction
+      ? {
+          PRISMA_SCHEMA_ENGINE_BINARY: `(await import("os")).arch() === "arm64" ? "${paths![
+            binaryTargets[1]!
+          ]!.replace("dist", "..")}" : "${paths![binaryTargets[0]!]!.replace(
+            "dist",
+            ".."
+          )}"`,
+        }
+      : undefined,
     minify: inAction,
     sourcemap: "linked",
     plugins: [fixOpendalPlugin, fixPrismaWasmPlugin],
