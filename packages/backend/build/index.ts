@@ -9,7 +9,6 @@ import {
 } from "@prisma/fetch-engine";
 import { prismaVersion } from "@/generated/prisma/internal/prismaNamespace";
 
-console.log(process.env);
 const inAction = process.env.GITHUB_ACTIONS === "true";
 
 const api = new fdir({
@@ -20,10 +19,9 @@ const api = new fdir({
 await rm("dist", { recursive: true, force: true });
 
 if (inAction) {
-  // todo
-  const arm = false ? "-arm64" : "";
   const binaryTargets: DownloadOptions["binaryTargets"] = [
-    `linux-musl${arm}-openssl-3.0.x`,
+    "linux-musl-openssl-3.0.x",
+    "linux-musl-arm64-openssl-3.0.x",
   ];
   const out = await download({
     binaries: {
@@ -37,6 +35,7 @@ if (inAction) {
   const platform = out[BinaryType.SchemaEngineBinary]!;
 
   process.env.PRISMA_SCHEMA_ENGINE_BINARY = platform[binaryTargets![0]!];
+  process.env.PRISMA_SCHEMA_ENGINE_BINARY_ARM = platform[binaryTargets![1]!];
 }
 
 await Promise.all([
