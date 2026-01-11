@@ -98,6 +98,14 @@ services:
     restart: unless-stopped
 ```
 
+### 环境变量一览
+
+| 环境变量          | 描述           | 说明                                | 默认值                                |
+| ----------------- | -------------- | ----------------------------------- | ------------------------------------- |
+| `DATABASE_URL`    | 数据库连接 URL | sqlite 文件路径/postgres 数据库链接 | file:/app/data/sqlite.db              |
+| `VALKEY_URL`      | 缓存连接 URL   | 缓存文件路径/redis 数据库链接       | ${os.tmpdir()}/keyv-file/default.json |
+| `FRONTEND_ORIGIN` | 前端界面地址   | 前端界面地址                        | https://elys.metapoint.tech           |
+
 ## 使用
 
 访问 [http://localhost:3000](http://localhost:3000) 即可使用。

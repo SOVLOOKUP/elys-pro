@@ -6,7 +6,8 @@ import { prisma } from "./db";
 import type { App } from "./generated/prisma/client";
 
 // 生产前端地址
-const frontend_origin = "https://elys.metapoint.tech";
+const frontend_origin =
+  process.env.FRONTEND_ORIGIN || "https://elys.metapoint.tech";
 
 const mainApp = new Elysia()
   // elys-pro 的管理 API
@@ -209,7 +210,20 @@ const startServer = async () => {
       // 携带后端地址跳转到前端
       .get("/", ({ request }) => {
         const target = new URL(frontend_origin);
-        target.searchParams.set("backendURL", encodeURIComponent(request.url));
+
+        // 远程仅允许 https 安全访问
+        const atLocalhost =
+          request.url.startsWith("http://localhost") ||
+          request.url.startsWith("http://127.0.0.1") ||
+          request.url.startsWith("http://0.0.0.0");
+
+        const backendURL = atLocalhost
+          ? request.url
+          : request.url.replace("http", "https");
+
+        target.searchParams.set("backendURL", encodeURIComponent(backendURL));
+
+        // 跳转到前端地址
         return Response.redirect(target.href, 302);
       })
       .listen({ port: mainPort });
