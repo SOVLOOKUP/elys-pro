@@ -21,6 +21,7 @@ if (!Bun.env.DATABASE_URL) {
 } else {
   databaseUrl = Bun.env.DATABASE_URL;
 }
+console.log("Using database url:", databaseUrl);
 
 // Determine the database adapter based on the DATABASE_URL environment variable
 if (databaseUrl?.startsWith("postgres")) {
