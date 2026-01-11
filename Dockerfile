@@ -1,5 +1,5 @@
 # 根据目标架构使用不同的基础镜像
-FROM oven/bun:latest AS base
+FROM oven/bun:alpine AS base
 
 # 设置工作目录
 WORKDIR /app/src
