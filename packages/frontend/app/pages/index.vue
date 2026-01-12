@@ -116,7 +116,6 @@ const uploadForm = ref({
 
 const schema = computed(() => {
   const targetSchema = schemaConfig[uploadForm.value.protocol];
-
   return targetSchema;
 });
 
