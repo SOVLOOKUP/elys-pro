@@ -5,6 +5,7 @@ import {
   schemas,
 } from "backend/src/loader/protocal/opendal/schema";
 import { newURL } from "backend/src/loader/protocal/opendal/utils";
+import { fsConfigSchema } from "backend/src/loader/protocal/opendal/optionsSchema";
 import { startCase, pascalCase } from "es-toolkit";
 
 const clipboard = useClipboard();
@@ -306,7 +307,9 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div
+      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+    >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex flex-col gap-4">
           <!-- 标题和上传按钮 -->
@@ -324,29 +327,40 @@ onMounted(async () => {
             <div class="relative flex items-center justify-between">
               <!-- 连接状态指示器 -->
               <div class="flex items-center gap-2 group">
-                <UBadge :color="backendStatus === 'connected'
-                  ? 'success'
-                  : backendStatus === 'disconnected'
-                    ? 'error'
-                    : backendStatus === 'checking'
+                <UBadge
+                  :color="
+                    backendStatus === 'connected'
+                      ? 'success'
+                      : backendStatus === 'disconnected'
+                      ? 'error'
+                      : backendStatus === 'checking'
                       ? 'warning'
                       : 'neutral'
-                  " variant="subtle" class="relative group">
+                  "
+                  variant="subtle"
+                  class="relative group"
+                >
                   <template #icon>
-                    <UIcon :name="backendStatus === 'connected'
-                      ? 'i-lucide-check-circle'
-                      : backendStatus === 'disconnected'
-                        ? 'i-lucide-x-circle'
-                        : backendStatus === 'checking'
+                    <UIcon
+                      :name="
+                        backendStatus === 'connected'
+                          ? 'i-lucide-check-circle'
+                          : backendStatus === 'disconnected'
+                          ? 'i-lucide-x-circle'
+                          : backendStatus === 'checking'
                           ? 'i-lucide-loader-2'
                           : 'i-lucide-circle'
-                      " :class="{ 'animate-spin': backendStatus === 'checking' }" />
+                      "
+                      :class="{ 'animate-spin': backendStatus === 'checking' }"
+                    />
                   </template>
                   <span class="group-hover:hidden">{{
                     backendStatusMessage
                   }}</span>
                   <code
-                    class="hidden group-hover:inline text-sm px-2 py-1 rounded">{{ useConfigStore().backendURL }}</code>
+                    class="hidden group-hover:inline text-sm px-2 py-1 rounded"
+                    >{{ useConfigStore().backendURL }}</code
+                  >
                 </UBadge>
               </div>
             </div>
@@ -384,79 +398,120 @@ onMounted(async () => {
 
                       <UForm class="space-y-4">
                         <UFormField label="应用名称" required>
-                          <UInput v-model="uploadForm.name" placeholder="例如: my-app" icon="i-lucide-package"
-                            class="font-mono w-full" />
+                          <UInput
+                            v-model="uploadForm.name"
+                            placeholder="例如: my-app"
+                            icon="i-lucide-package"
+                            class="font-mono w-full"
+                          />
                         </UFormField>
 
-                        <UFormField label="版本号" required>
-                          <UInput v-model="uploadForm.version" placeholder="例如: 1.0.0" icon="i-lucide-git-branch"
-                            class="font-mono w-full" />
+                        <UFormField label="版本编号" required>
+                          <UInput
+                            v-model="uploadForm.version"
+                            placeholder="例如: 1.0.0"
+                            icon="i-lucide-git-branch"
+                            class="font-mono w-full"
+                          />
                         </UFormField>
 
-                        <UFormField label="来源" required>
+                        <UFormField label="应用来源" required>
                           <UFieldGroup class="w-full">
-                            <USelect width="full" v-model="uploadForm.protocol" :items="protocols"
-                              icon="i-lucide-command" :ui="{ content: 'min-w-fit' }" placeholder="选择来源协议">
+                            <USelect
+                              width="full"
+                              v-model="uploadForm.protocol"
+                              :items="protocols"
+                              icon="i-lucide-command"
+                              :ui="{ content: 'min-w-fit' }"
+                              placeholder="选择来源协议"
+                            >
                               <template #leading="{ modelValue, ui }">
-                                <UIcon v-if="modelValue" :name="getProtocolIcon(modelValue)"
-                                  :class="ui.leadingAvatar()" />
+                                <UIcon
+                                  v-if="modelValue"
+                                  :name="getProtocolIcon(modelValue)"
+                                  :class="ui.leadingAvatar()"
+                                />
                               </template>
                             </USelect>
 
-                            <UInput v-model="uploadForm.path" placeholder="/app/index.js" class="font-mono w-full" />
+                            <UInput
+                              v-model="uploadForm.path"
+                              placeholder="路径(例如：/app/index.js)"
+                              class="font-mono w-full"
+                            />
 
-                            <UButton color="neutral" variant="outline" size="sm" square icon="i-lucide-circle-help" :to="`https://docs.rs/opendal/latest/opendal/services/struct.${pascalCase(
-                              uploadForm.protocol
-                            )}Config.html`" target="_blank" />
+                            <UButton
+                              color="neutral"
+                              variant="outline"
+                              size="sm"
+                              square
+                              icon="i-lucide-circle-help"
+                              :to="`https://docs.rs/opendal/latest/opendal/services/struct.${pascalCase(
+                                uploadForm.protocol
+                              )}Config.html`"
+                              target="_blank"
+                            />
                           </UFieldGroup>
                         </UFormField>
 
                         <!-- todo 动态使用表单组件 -->
-                        <UFormField label="配置" required>
+                        <UFormField label="协议配置">
                           <div class="w-full rounded-lg">
                             <p class="text-xs text-gray-500 mb-2">
-                              填写协议配置参数（JSON格式）
+                              填写协议配置参数
                             </p>
-
-                            <!-- <FormKit
-                              label="Username"
-                              type="text"
-                              help="Pick a new username"
-                              validation="required|matches:/^@[a-zA-Z]+$/|length:5"
-                              value="@FormKit"
-                            /> -->
-                            <!-- <UTextarea
-                              v-model="uploadForm.config"
-                              placeholder='{"root": "/path/to/app"}'
-                              class="font-mono w-full"
-                            /> -->
+                            <UCard>
+                              <MAutoForm
+                                class="space-y-2"
+                                :submitButton="false"
+                                :schema="fsConfigSchema"
+                                :state="uploadForm.config"
+                              />
+                            </UCard>
                           </div>
                         </UFormField>
                       </UForm>
 
                       <!-- 链接预览 -->
                       <div
-                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 relative">
+                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 relative"
+                      >
                         <p class="text-xs text-gray-500 mb-1">资源 URL 预览</p>
                         <div class="flex items-center gap-2">
-                          <UIcon name="i-lucide-link-2" class="text-gray-400 flex-shrink-0" />
+                          <UIcon
+                            name="i-lucide-link-2"
+                            class="text-gray-400 flex-shrink-0"
+                          />
                           <code
-                            class="text-sm text-gray-700 dark:text-gray-300 break-all font-mono">{{ uploadURL }}</code>
+                            class="text-sm text-gray-700 dark:text-gray-300 break-all font-mono"
+                            >{{ uploadURL }}</code
+                          >
                         </div>
                         <!-- 复制按钮放在右上角 -->
-                        <UButton color="neutral" variant="ghost" size="xs" square icon="i-lucide-copy"
-                          class="absolute top-2 right-2" @click="
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
+                          square
+                          icon="i-lucide-copy"
+                          class="absolute top-2 right-2"
+                          @click="
                             clipboard.copy(uploadURL);
-                          toast.add({
-                            title: '已复制到剪贴板',
-                            color: 'success',
-                          });
-                          " />
+                            toast.add({
+                              title: '已复制到剪贴板',
+                              color: 'success',
+                            });
+                          "
+                        />
                       </div>
 
                       <template #footer>
                         <div class="flex justify-end gap-2">
-                          <UButton color="neutral" variant="ghost" @click="uploadModalOpen = false">
+                          <UButton
+                            color="neutral"
+                            variant="ghost"
+                            @click="uploadModalOpen = false"
+                          >
                             取消
                           </UButton>
                           <UButton :loading="loading" @click="uploadApp">
@@ -475,14 +530,23 @@ onMounted(async () => {
             </div>
 
             <div v-else-if="apps.length === 0" class="text-center py-8">
-              <UIcon name="i-lucide-package" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-package"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">暂无应用</p>
             </div>
 
             <div v-else class="space-y-2">
-              <UButton v-for="app in apps" :key="app.name" :variant="selectedApp === app.name ? 'soft' : 'ghost'"
-                :color="selectedApp === app.name ? 'primary' : 'neutral'" block class="justify-between"
-                @click="selectApp(app)">
+              <UButton
+                v-for="app in apps"
+                :key="app.name"
+                :variant="selectedApp === app.name ? 'soft' : 'ghost'"
+                :color="selectedApp === app.name ? 'primary' : 'neutral'"
+                block
+                class="justify-between"
+                @click="selectApp(app)"
+              >
                 <span class="flex items-center gap-2">
                   <UIcon name="i-lucide-package" />
                   {{ app.name }}
@@ -507,8 +571,13 @@ onMounted(async () => {
                   <UBadge color="primary" variant="subtle">
                     {{ versions.length }} 个版本
                   </UBadge>
-                  <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
-                    @click="confirmDelete(selectedApp, 'all')">
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    color="error"
+                    variant="ghost"
+                    size="sm"
+                    @click="confirmDelete(selectedApp, 'all')"
+                  >
                     删除应用
                   </UButton>
                 </div>
@@ -516,7 +585,10 @@ onMounted(async () => {
             </template>
 
             <div v-if="!selectedApp" class="text-center py-16">
-              <UIcon name="i-lucide-arrow-left" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-arrow-left"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">请从左侧选择一个应用</p>
             </div>
 
@@ -525,16 +597,28 @@ onMounted(async () => {
             </div>
 
             <div v-else-if="versions.length === 0" class="text-center py-16">
-              <UIcon name="i-lucide-git-branch" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-git-branch"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">该应用暂无版本</p>
             </div>
 
             <div v-else class="space-y-3">
-              <UCard v-for="version in versions" :key="version" :ui="{ body: 'p-4' }">
+              <UCard
+                v-for="version in versions"
+                :key="version"
+                :ui="{ body: 'p-4' }"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
-                    <div class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg">
-                      <UIcon name="i-lucide-git-branch" class="text-primary-500" />
+                    <div
+                      class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg"
+                    >
+                      <UIcon
+                        name="i-lucide-git-branch"
+                        class="text-primary-500"
+                      />
                     </div>
                     <div>
                       <p class="font-medium">{{ version }}</p>
@@ -544,12 +628,23 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex gap-2">
-                    <UButton :to="appURL(version)" target="_blank" icon="i-lucide-external-link" color="primary"
-                      variant="ghost" size="sm">
+                    <UButton
+                      :to="appURL(version)"
+                      target="_blank"
+                      icon="i-lucide-external-link"
+                      color="primary"
+                      variant="ghost"
+                      size="sm"
+                    >
                       访问
                     </UButton>
-                    <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
-                      @click="confirmDelete(selectedApp, version)">
+                    <UButton
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
+                      size="sm"
+                      @click="confirmDelete(selectedApp, version)"
+                    >
                       删除
                     </UButton>
                   </div>
@@ -584,7 +679,11 @@ onMounted(async () => {
 
           <template #footer>
             <div class="flex justify-end gap-2">
-              <UButton color="neutral" variant="ghost" @click="deleteModalOpen = false">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="deleteModalOpen = false"
+              >
                 取消
               </UButton>
               <UButton color="error" :loading="loading" @click="deleteApp">
