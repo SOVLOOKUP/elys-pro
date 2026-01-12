@@ -53,7 +53,6 @@
         "@iconify-json/simple-icons": "^1.2.65",
         "@nuxt/ui": "^4.3.0",
         "@pinia/nuxt": "^0.11.3",
-        "elys-pro-backend": "../backend",
         "es-toolkit": "^1.43.0",
         "nuxt": "^4.2.2",
         "pinia": "^3.0.4",
@@ -2728,8 +2727,6 @@
     "fontless/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "framer-motion/tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
-
-    "frontend/elys-pro-backend": ["elys-pro-backend@file:packages/backend", { "dependencies": { "@elysiajs/cors": "^1.4.1", "@elysiajs/eden": "^1.4.6", "@keyv/compress-gzip": "^2.0.3", "@keyv/valkey": "^1.0.11", "@prisma/adapter-pg": "^7.2.0", "@prisma/client": "^7.2.0", "@prisma/migrate": "^7.2.0", "elysia": "^1.4.21", "es-toolkit": "^1.43.0", "keyv": "^5.5.5", "keyv-file": "^5.3.3", "ky": "^1.14.2", "opendal": "^0.49.2", "pg": "^8.16.3", "prisma-adapter-bun-sqlite": "^0.6.4", "semver": "^7.7.3" }, "devDependencies": { "@prisma/fetch-engine": "^7.2.0", "@types/bun": "latest", "@types/fs-extra": "^11.0.4", "@types/pg": "^8.16.0", "@types/semver": "^7.7.1", "css-select": "^6.0.0", "fdir": "^6.5.0", "fs-extra": "^11.3.3", "htmlparser2": "^10.0.0", "prisma": "^7.2.0", "prismabox": "^1.1.26" }, "peerDependencies": { "typescript": "^5.9.3" } }],
 
     "fs-minipass/minipass": ["minipass@3.3.6", "", { "dependencies": { "yallist": "^4.0.0" } }, "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw=="],
 

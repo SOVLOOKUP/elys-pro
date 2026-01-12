@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { type AppModel } from "elys-pro-backend/src/generated/prisma/internal/prismaNamespace";
+import { type AppModel } from "../../../backend/src/generated/prisma/internal/prismaNamespace";
 import {
   type OpendalSchema,
   schemas,
-} from "elys-pro-backend/src/loader/protocal/opendal/schema";
-import { newURL } from "elys-pro-backend/src/loader/protocal/opendal/utils";
-import { startCase } from "es-toolkit";
+} from "../../../backend/src/loader/protocal/opendal/schema";
+import { newURL } from "../../../backend/src/loader/protocal/opendal/utils";
+import { startCase, pascalCase } from "es-toolkit";
 
 const { $elysia } = useNuxtApp();
 const toast = useToast();
@@ -51,33 +51,55 @@ const protocols = ref<{ label: string; value: OpendalSchema; icon: string }[]>(
 );
 
 // 获取协议对应的图标
-// todo: 美化图标
-function getProtocolIcon(protocol: string): string {
-  const iconMap: Record<string, string> = {
+function getProtocolIcon(protocol: OpendalSchema): string {
+  const iconMap: Record<OpendalSchema, string> = {
     fs: "i-lucide-folder",
-    http: "i-lucide-globe",
-    s3: "i-lucide-cloud",
-    gcs: "i-lucide-cloud",
-    azblob: "i-lucide-cloud",
-    oss: "i-lucide-cloud",
-    webdav: "i-lucide-server",
-    memory: "i-lucide-brain",
+    http: "ic:twotone-http",
+    s3: "solar:cloud-storage-linear",
+    gcs: "mingcute:google-fill",
+    azblob: "tabler:brand-azure",
+    oss: "ant-design:aliyun-outlined",
+    webdav: "icon-park-twotone:cloud-storage",
+    memory: "bxs:memory-card",
     redis: "cib:redis",
-    mysql: "i-lucide-database",
-    postgresql: "i-lucide-database",
-    mongodb: "i-lucide-database",
-    sqlite: "i-lucide-database",
-    dropbox: "i-lucide-cloud",
-    gdrive: "i-lucide-cloud",
-    onedrive: "i-lucide-cloud",
-    "aliyun-drive": "i-lucide-cloud",
-    ipfs: "i-lucide-network",
-    etcd: "i-lucide-server",
-    memcached: "i-lucide-brain",
-    huggingface: "i-lucide-robot",
-    "vercel-artifacts": "i-lucide-deploy",
+    mysql: "tabler:brand-mysql",
+    postgresql: "akar-icons:postgresql-fill",
+    mongodb: "simple-icons:mongodb",
+    sqlite: "file-icons:sqlite",
+    dropbox: "akar-icons:dropbox-fill",
+    gdrive: "picon:gdrive",
+    onedrive: "simple-icons:microsoftonedrive",
+    "aliyun-drive": "streamline-plump:hard-drive-2-remix",
+    ipfs: "simple-icons:ipfs",
+    etcd: "simple-icons:etcd",
+    memcached: "devicon-plain:memcached",
+    huggingface: "simple-icons:huggingface",
+    "vercel-artifacts": "famicons:logo-vercel",
+    azdls: "teenyicons:azure-outline",
+    cos: "cib:tencent-qq",
+    ghac: "mingcute:github-line",
+    ipmfs: "arcticons:ipfslite",
+    obs: "simple-icons:huawei",
+    webhdfs: "streamline-ultimate:circus-elephant-bold",
+    cacache: "octicon:cache-24",
+    dashmap: "material-symbols:dashboard",
+    "mini-moka": "game-icons:moka-pot",
+    moka: "game-icons:moka-pot",
+    persy: "material-symbols:calendar-view-day-sharp",
+    koofr: "arcticons:koofr",
+    redb: "bxl:redbubble",
+    sled: "solar:sledgehammer-bold",
+    tikv: "mdi:database",
+    gridfs: "material-symbols:grid-3x3-rounded",
+    azfile: "famicons:logo-amazon",
+    swift: "tabler:brand-swift",
+    alluxio: "arcticons:auxio-alt",
+    b2: "carbon:ibm-db2-alt",
+    seafile: "simple-icons:seafile",
+    upyun: "gravity-ui:logo-yandex",
+    "yandex-disk": "gravity-ui:logo-yandex-messenger",
   };
-  return iconMap[protocol] || "i-lucide-file";
+  return iconMap[protocol] || "ic:baseline-question-mark";
 }
 
 // 上传表单
@@ -85,8 +107,16 @@ const uploadForm = ref({
   name: "",
   version: "",
   protocol: "fs" as OpendalSchema,
-  config: "",
+  config: "{}",
   path: "",
+});
+
+const uploadURL = computed(() => {
+  return newURL(
+    uploadForm.value.protocol,
+    JSON.parse(uploadForm.value.config),
+    uploadForm.value.path
+  );
 });
 
 // 加载应用列表
@@ -168,16 +198,9 @@ async function uploadApp() {
 
   loading.value = true;
   try {
-    // 构造完整的 URL
-    const appUrl = newURL(
-      uploadForm.value.protocol,
-      JSON.parse(uploadForm.value.config),
-      uploadForm.value.path
-    );
-
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
     await $elysia.api.app({ name: uploadForm.value.name }).post(
-      { url: appUrl },
+      { url: uploadURL.value },
       {
         query: {
           version: uploadForm.value.version,
@@ -196,7 +219,7 @@ async function uploadApp() {
       name: "",
       version: "",
       protocol: "fs",
-      config: "",
+      config: "{}",
       path: "",
     };
     await loadApps();
@@ -389,24 +412,39 @@ onMounted(async () => {
                         </UFormField>
 
                         <UFormField label="协议" required>
-                          <USelect
-                            width="full"
-                            v-model="uploadForm.protocol"
-                            :items="protocols"
-                            icon="i-lucide-command"
-                            :ui="{ content: 'min-w-fit' }"
-                            placeholder="选择协议"
-                          >
-                            <template #leading="{ modelValue, ui }">
-                              <UIcon
-                                v-if="modelValue"
-                                :name="getProtocolIcon(modelValue)"
-                                :class="ui.leadingAvatar()"
-                              />
-                            </template>
-                          </USelect>
+                          <span class="flex items-center gap-2">
+                            <USelect
+                              width="full"
+                              v-model="uploadForm.protocol"
+                              :items="protocols"
+                              icon="i-lucide-command"
+                              :ui="{ content: 'min-w-fit' }"
+                              placeholder="选择协议"
+                            >
+                              <template #leading="{ modelValue, ui }">
+                                <UIcon
+                                  v-if="modelValue"
+                                  :name="getProtocolIcon(modelValue)"
+                                  :class="ui.leadingAvatar()"
+                                />
+                              </template>
+                            </USelect>
+
+                            <UButton
+                              variant="ghost"
+                              color="neutral"
+                              size="sm"
+                              square
+                              icon="i-lucide-circle-help"
+                              :to="`https://docs.rs/opendal/latest/opendal/services/struct.${pascalCase(
+                                uploadForm.protocol
+                              )}Config.html`"
+                              target="_blank"
+                            />
+                          </span>
                         </UFormField>
 
+                        <!-- todo 动态导入表单项 -->
                         <UFormField label="配置" required>
                           <div
                             class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg"
@@ -421,14 +459,17 @@ onMounted(async () => {
                           </div>
                         </UFormField>
 
-                        <UFormField label="路径" required>
+                        <!-- todo opendal 读取后用户选择？ -->
+                        <!-- <UFormField label="路径" required>
                           <UInput
                             v-model="uploadForm.path"
                             placeholder="例如: /app/index.js"
                             icon="i-lucide-folder"
                           />
-                        </UFormField>
+                        </UFormField> -->
                       </UForm>
+
+                      URL: {{ uploadURL }}
 
                       <template #footer>
                         <div class="flex justify-end gap-2">

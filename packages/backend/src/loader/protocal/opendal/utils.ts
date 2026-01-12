@@ -3,9 +3,12 @@ import type { OpendalOption } from "./options";
 
 // 使用 base64 将 options 编码
 export const encodeOptions = (options: Record<string, string>) => {
-  const opts = new URLSearchParams(options);
-  opts.sort();
-  return btoa(JSON.stringify(opts.toJSON()));
+  const sortedKeys = Object.keys(options).sort();
+  const sortedObj: Record<string, string> = {};
+  for (const key of sortedKeys) {
+    sortedObj[key] = options[key]!;
+  }
+  return btoa(JSON.stringify(sortedObj));
 };
 
 // 构造新的 Opendal URL，将 options 构造到 URL host 中

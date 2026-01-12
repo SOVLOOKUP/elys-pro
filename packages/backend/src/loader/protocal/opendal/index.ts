@@ -4,11 +4,6 @@ import { addProtocol } from "..";
 import { decodeOptions } from "./utils";
 
 for (const schema of schemas) {
-  // http 已经有了
-  if (schema === "http") {
-    continue;
-  }
-
   addProtocol(schema, async (args) => {
     const url = new URL(`${schema}:${args.path}`);
 
