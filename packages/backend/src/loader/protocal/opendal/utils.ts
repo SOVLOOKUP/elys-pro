@@ -1,4 +1,4 @@
-import { type OpendalSchema } from "./schema";
+import type { OpendalSchema } from "./schema";
 import type { OpendalOption } from "./options";
 
 // 使用 base64 将 options 编码

@@ -1,4 +1,4 @@
-import { newClient } from "../../../backend";
+import { newClient } from "backend";
 
 export default defineNuxtPlugin({
   name: "elysia",
