@@ -401,6 +401,7 @@ onMounted(async () => {
                             v-model="uploadForm.name"
                             placeholder="例如: my-app"
                             icon="i-lucide-package"
+                            class="font-mono w-full"
                           />
                         </UFormField>
 
@@ -409,11 +410,12 @@ onMounted(async () => {
                             v-model="uploadForm.version"
                             placeholder="例如: 1.0.0"
                             icon="i-lucide-git-branch"
+                            class="font-mono w-full"
                           />
                         </UFormField>
 
                         <UFormField label="来源" required>
-                          <UFieldGroup>
+                          <UFieldGroup class="w-full">
                             <USelect
                               width="full"
                               v-model="uploadForm.protocol"
@@ -434,6 +436,7 @@ onMounted(async () => {
                             <UInput
                               v-model="uploadForm.path"
                               placeholder="/app/index.js"
+                              class="font-mono w-full"
                             />
 
                             <UButton
@@ -452,13 +455,14 @@ onMounted(async () => {
 
                         <!-- todo 动态使用表单组件 -->
                         <UFormField label="配置" required>
-                          <div class="rounded-lg">
+                          <div class="w-full rounded-lg">
                             <p class="text-xs text-gray-500 mb-2">
                               填写协议配置参数（JSON格式）
                             </p>
                             <UTextarea
                               v-model="uploadForm.config"
                               placeholder='{"root": "/path/to/app"}'
+                              class="font-mono w-full"
                             />
                           </div>
                         </UFormField>
@@ -466,32 +470,35 @@ onMounted(async () => {
 
                       <!-- 链接预览 -->
                       <div
-                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 relative"
                       >
-                        <p class="text-xs text-gray-500 mb-1">
-                          解析后的访问地址
-                        </p>
+                        <p class="text-xs text-gray-500 mb-1">资源 URL 预览</p>
                         <div class="flex items-center gap-2">
-                          <UIcon name="i-lucide-link-2" class="text-gray-400" />
+                          <UIcon
+                            name="i-lucide-link-2"
+                            class="text-gray-400 flex-shrink-0"
+                          />
                           <code
-                            class="text-sm text-gray-700 dark:text-gray-300 break-all"
+                            class="text-sm text-gray-700 dark:text-gray-300 break-all font-mono"
                             >{{ uploadURL }}</code
                           >
-                          <UButton
-                            color="neutral"
-                            variant="ghost"
-                            size="xs"
-                            square
-                            icon="i-lucide-copy"
-                            @click="
-                              clipboard.copy(uploadURL);
-                              toast.add({
-                                title: '已复制到剪贴板',
-                                color: 'success',
-                              });
-                            "
-                          />
                         </div>
+                        <!-- 复制按钮放在右上角 -->
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
+                          square
+                          icon="i-lucide-copy"
+                          class="absolute top-2 right-2"
+                          @click="
+                            clipboard.copy(uploadURL);
+                            toast.add({
+                              title: '已复制到剪贴板',
+                              color: 'success',
+                            });
+                          "
+                        />
                       </div>
 
                       <template #footer>
