@@ -4,6 +4,7 @@ import {
   type OpendalSchema,
   schemas,
 } from "elys-pro-backend/src/loader/protocal/opendal/schema";
+import { newURL } from "elys-pro-backend/src/loader/protocal/opendal/utils";
 
 const { $elysia } = useNuxtApp();
 const toast = useToast();
@@ -49,6 +50,7 @@ const protocols = ref<{ label: string; value: OpendalSchema; icon: string }[]>(
 );
 
 // 获取协议对应的图标
+// todo: 美化图标
 function getProtocolIcon(protocol: string): string {
   const iconMap: Record<string, string> = {
     fs: "i-lucide-folder",
@@ -59,7 +61,7 @@ function getProtocolIcon(protocol: string): string {
     oss: "i-lucide-cloud",
     webdav: "i-lucide-server",
     memory: "i-lucide-brain",
-    redis: "i-lucide-database",
+    redis: "cib:redis",
     mysql: "i-lucide-database",
     postgresql: "i-lucide-database",
     mongodb: "i-lucide-database",
@@ -75,24 +77,6 @@ function getProtocolIcon(protocol: string): string {
     "vercel-artifacts": "i-lucide-deploy",
   };
   return iconMap[protocol] || "i-lucide-file";
-}
-
-// 编码配置为 base64
-function encodeOptions(options: Record<string, string>): string {
-  const opts = new URLSearchParams(options);
-  // 对参数进行排序
-  const sortedEntries = Array.from(opts.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-  const sortedOpts = new URLSearchParams(sortedEntries);
-  return btoa(JSON.stringify(Object.fromEntries(sortedOpts)));
-}
-
-// 构造完整的 URL
-function constructUrl(protocol: string, config: string, path: string): string {
-  const encodedConfig = encodeOptions(JSON.parse(config));
-  const url = new URL(path, `${protocol}://${encodedConfig}/`);
-  return url.href;
 }
 
 // 上传表单
@@ -184,20 +168,21 @@ async function uploadApp() {
   loading.value = true;
   try {
     // 构造完整的 URL
-    const appUrl = constructUrl(
+    const appUrl = newURL(
       uploadForm.value.protocol,
-      uploadForm.value.config,
+      JSON.parse(uploadForm.value.config),
       uploadForm.value.path
     );
 
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
-    await $elysia.api
-      .app({ name: uploadForm.value.name })
-      .post({ url: appUrl } as any, {
+    await $elysia.api.app({ name: uploadForm.value.name }).post(
+      { url: appUrl },
+      {
         query: {
           version: uploadForm.value.version,
         },
-      });
+      }
+    );
 
     toast.add({
       title: "上传成功",

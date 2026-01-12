@@ -54,7 +54,6 @@
         "@nuxt/ui": "^4.3.0",
         "@pinia/nuxt": "^0.11.3",
         "elys-pro-backend": "../backend",
-        "es-toolkit": "^1.43.0",
         "nuxt": "^4.2.2",
         "pinia": "^3.0.4",
         "pinia-plugin-persistedstate": "^4.7.1",
