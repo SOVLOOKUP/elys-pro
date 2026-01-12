@@ -1,11 +1,13 @@
 import { TOML } from "bun";
 import ky from "ky";
-import { pascalCase } from "es-toolkit";
+import { camelCase, pascalCase } from "es-toolkit";
 import { parseDocument } from "htmlparser2";
 import { selectOne } from "css-select";
+import { generate } from "ts-to-zod";
 
 // 配置并发请求数量
-const CONCURRENT_REQUESTS = 5;
+const CONCURRENT_REQUESTS = 8;
+const generatedPath = "./src/loader/protocal/opendal/generated/";
 
 // 进度显示函数
 function showProgress(current: number, total: number, service: string) {
@@ -134,12 +136,10 @@ ${schemas.map((item) => `    | "${item}"`).join("\n")}
 
 export const schemas: OpendalSchema[] = ${JSON.stringify(schemas)};`;
 
-  await Bun.write(
-    "./src/loader/protocal/opendal/generated/schema.ts",
-    schemaCode
-  );
+  await Bun.write(`${generatedPath}schema.ts`, schemaCode);
   console.log("\n已生成 schema.ts");
 
+  // 生成 options.ts
   // 处理 options
   const pascalCaseOptions = schemas.map((item) => pascalCase(item));
   const optionhtmlurl = pascalCaseOptions.map(
@@ -161,10 +161,36 @@ export type OpendalOption = ${pascalCaseOptions
     .map((item) => `\n  | ${item}Config`)
     .join("")};`;
 
+  await Bun.write(`${generatedPath}options.ts`, optioncode);
+
+  // 生成 optionsSchema.ts
+  const out = generate({
+    sourceText: optioncode,
+  });
+
   await Bun.write(
-    "./src/loader/protocal/opendal/generated/options.ts",
-    optioncode
+    `${generatedPath}optionsSchema.ts`,
+    out.getZodSchemasFile(`${generatedPath}options.ts`)
   );
+
+  // 生成 schemaConfig.ts
+  const camelCaseOptions = schemas.map(
+    (item) => `${camelCase(item)}ConfigSchema`
+  );
+  const optionsExport = schemas
+    .map((item) => `"${item}": ${camelCase(item)}ConfigSchema`)
+    .join(",\n  ");
+
+  const schemaConfig = `import { 
+  ${camelCaseOptions.join(",\n  ")}
+} from "./optionsSchema";
+
+export default {
+  ${optionsExport}
+};`;
+
+  await Bun.write(`${generatedPath}schemaConfig.ts`, schemaConfig);
+
   console.log("\n\n完成！已生成所有文件");
 }
 
