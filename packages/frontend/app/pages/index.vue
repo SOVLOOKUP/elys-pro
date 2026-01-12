@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type AppModel } from 'elys-pro-backend/src/generated/prisma/internal/prismaNamespace';
+import { type AppModel } from "elys-pro-backend/src/generated/prisma/internal/prismaNamespace";
 
 const { $elysia } = useNuxtApp();
 const toast = useToast();
@@ -14,32 +14,151 @@ const deleteModalOpen = ref(false);
 const appToDelete = ref<{ name: string; version: string | "all" } | null>(null);
 
 // 请求状态
-const lastRequestStatus = ref<'idle' | 'loading' | 'success' | 'error'>('idle');
+const lastRequestStatus = ref<"idle" | "loading" | "success" | "error">("idle");
 
-const config = useConfigStore()
+// 后端连接状态
+const backendStatus = ref<"checking" | "connected" | "disconnected">(
+  "checking"
+);
+
+const backendStatusMessage = ref("正在检查后端连接...");
+
+// 检查后端连接状态
+async function checkBackendStatus() {
+  try {
+    await $elysia.api.health.get();
+    backendStatus.value = "connected";
+    backendStatusMessage.value = "后端连接正常";
+  } catch (error) {
+    backendStatus.value = "disconnected";
+    backendStatusMessage.value = "后端连接失败";
+  }
+}
+
+// 支持的协议列表
+const protocols = ref([
+  "azblob",
+  "azdls",
+  "cos",
+  "fs",
+  "gcs",
+  "ghac",
+  "http",
+  "ipmfs",
+  "memory",
+  "obs",
+  "oss",
+  "s3",
+  "webdav",
+  "webhdfs",
+  "aliyun-drive",
+  "cacache",
+  "dashmap",
+  "dropbox",
+  "etcd",
+  "gdrive",
+  "huggingface",
+  "ipfs",
+  "memcached",
+  "mini-moka",
+  "moka",
+  "onedrive",
+  "persy",
+  "postgresql",
+  "koofr",
+  "mysql",
+  "redb",
+  "redis",
+  "sled",
+  "tikv",
+  "vercel-artifacts",
+  "mongodb",
+  "gridfs",
+  "sqlite",
+  "azfile",
+  "swift",
+  "alluxio",
+  "b2",
+  "seafile",
+  "upyun",
+  "yandex-disk",
+]);
+
+// 获取协议对应的图标
+function getProtocolIcon(protocol: string): string {
+  const iconMap: Record<string, string> = {
+    fs: "i-lucide-folder",
+    http: "i-lucide-globe",
+    s3: "i-lucide-cloud",
+    gcs: "i-lucide-cloud",
+    azblob: "i-lucide-cloud",
+    oss: "i-lucide-cloud",
+    webdav: "i-lucide-server",
+    memory: "i-lucide-brain",
+    redis: "i-lucide-database",
+    mysql: "i-lucide-database",
+    postgresql: "i-lucide-database",
+    mongodb: "i-lucide-database",
+    sqlite: "i-lucide-database",
+    dropbox: "i-lucide-cloud",
+    gdrive: "i-lucide-cloud",
+    onedrive: "i-lucide-cloud",
+    "aliyun-drive": "i-lucide-cloud",
+    ipfs: "i-lucide-network",
+    etcd: "i-lucide-server",
+    memcached: "i-lucide-brain",
+    huggingface: "i-lucide-robot",
+    "vercel-artifacts": "i-lucide-deploy",
+  };
+  return iconMap[protocol] || "i-lucide-file";
+}
+
+// 编码配置为 base64
+function encodeOptions(options: Record<string, string>): string {
+  const opts = new URLSearchParams(options);
+  // 对参数进行排序
+  const sortedEntries = Array.from(opts.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+  const sortedOpts = new URLSearchParams(sortedEntries);
+  return btoa(JSON.stringify(Object.fromEntries(sortedOpts)));
+}
+
+// 构造完整的 URL
+function constructUrl(
+  protocol: string,
+  config: Record<string, string>,
+  path: string
+): string {
+  const encodedConfig = encodeOptions(config);
+  const url = new URL(path, `${protocol}://${encodedConfig}/`);
+  return url.href;
+}
 
 // 上传表单
 const uploadForm = ref({
   name: "",
   version: "",
-  file: null as File | null,
+  protocol: "fs" as string,
+  config: {} as Record<string, string>,
+  path: "",
 });
 
 // 加载应用列表
 async function loadApps() {
   loading.value = true;
-  lastRequestStatus.value = 'loading';
+  lastRequestStatus.value = "loading";
   try {
     const { data } = await $elysia.api.apps.get();
     apps.value = data || [];
-    lastRequestStatus.value = 'success';
+    lastRequestStatus.value = "success";
   } catch (error) {
     toast.add({
       title: "加载失败",
       description: "无法获取应用列表",
       color: "warning",
     });
-    lastRequestStatus.value = 'error';
+    lastRequestStatus.value = "error";
   } finally {
     loading.value = false;
   }
@@ -53,11 +172,16 @@ async function loadVersions(appName: string) {
     // 根据API实际返回的数据结构处理版本信息
     if (Array.isArray(data)) {
       // 如果API返回的是对象数组，则从中提取版本号
-      if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'version' in data[0]) {
+      if (
+        data.length > 0 &&
+        typeof data[0] === "object" &&
+        data[0] !== null &&
+        "version" in data[0]
+      ) {
         versions.value = data.map((item: any) => item.version) || [];
       } else {
         // 如果API返回的是字符串数组，则直接使用
-        versions.value = data as unknown as string[] || [];
+        versions.value = (data as unknown as string[]) || [];
       }
     } else {
       versions.value = [];
@@ -76,7 +200,7 @@ async function loadVersions(appName: string) {
 // 选择应用
 function selectApp(app: AppModel | string) {
   // 如果传入的是 AppData 对象，则使用其 name 属性
-  const appName = typeof app === 'string' ? app : app.name;
+  const appName = typeof app === "string" ? app : app.name;
   selectedApp.value = appName;
   loadVersions(appName);
 }
@@ -84,9 +208,10 @@ function selectApp(app: AppModel | string) {
 // 上传应用
 async function uploadApp() {
   if (
-    !uploadForm.value.file ||
     !uploadForm.value.name ||
-    !uploadForm.value.version
+    !uploadForm.value.version ||
+    !uploadForm.value.protocol ||
+    !uploadForm.value.path
   ) {
     toast.add({
       title: "表单不完整",
@@ -98,15 +223,21 @@ async function uploadApp() {
 
   loading.value = true;
   try {
+    // 构造完整的 URL
+    const appUrl = constructUrl(
+      uploadForm.value.protocol,
+      uploadForm.value.config,
+      uploadForm.value.path
+    );
+
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
-    await $elysia.api.app({ name: uploadForm.value.name }).post(
-      { file: uploadForm.value.file } as any,
-      {
+    await $elysia.api
+      .app({ name: uploadForm.value.name })
+      .post({ url: appUrl } as any, {
         query: {
           version: uploadForm.value.version,
         },
-      }
-    );
+      });
 
     toast.add({
       title: "上传成功",
@@ -115,7 +246,13 @@ async function uploadApp() {
     });
 
     uploadModalOpen.value = false;
-    uploadForm.value = { name: "", version: "", file: null };
+    uploadForm.value = {
+      name: "",
+      version: "",
+      protocol: "fs",
+      config: {},
+      path: "",
+    };
     await loadApps();
     if (selectedApp.value) {
       await loadVersions(selectedApp.value);
@@ -144,11 +281,13 @@ async function deleteApp() {
   loading.value = true;
   try {
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
-    await $elysia.api.app({ name: appToDeleteValue.name }).delete(undefined as any, {
-      query: {
-        version: appToDeleteValue.version,
-      },
-    });
+    await $elysia.api
+      .app({ name: appToDeleteValue.name })
+      .delete(undefined as any, {
+        query: {
+          version: appToDeleteValue.version,
+        },
+      });
 
     toast.add({
       title: "删除成功",
@@ -179,84 +318,82 @@ async function deleteApp() {
   }
 }
 
-// 文件选择处理
-function handleFileChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    uploadForm.value.file = target.files[0];
-  }
-}
+// 生成应用 URL 地址
+const appURL = (version: string) =>
+  new URL(`/app/${selectedApp.value}/${version}/`, useConfigStore().backendURL)
+    .href;
 
 // 初始化
-onMounted(() => {
-  loadApps();
-});
+onMounted(async () => {
+  // 检查后端连接状态
+  await checkBackendStatus();
 
-// 生成应用 URL 地址
-const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version}/`, useConfigStore().backendURL).href;
+  // 加载应用列表
+  await loadApps();
+});
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div
+      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+    >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-              Elysia 应用管理
-            </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              管理和部署你的 Elysia 应用
-            </p>
+        <div class="flex flex-col gap-4">
+          <!-- 标题和上传按钮 -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                Elysia 应用管理
+              </h1>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                管理和部署你的 Elysia 应用
+              </p>
+            </div>
+
+            <!-- 后端连接状态 -->
+            <div class="relative flex items-center justify-between">
+              <!-- 连接状态指示器 -->
+              <div class="flex items-center gap-2 group">
+                <UBadge
+                  :color="
+                    backendStatus === 'connected'
+                      ? 'success'
+                      : backendStatus === 'disconnected'
+                      ? 'error'
+                      : backendStatus === 'checking'
+                      ? 'warning'
+                      : 'neutral'
+                  "
+                  variant="subtle"
+                  class="relative group"
+                >
+                  <template #icon>
+                    <UIcon
+                      :name="
+                        backendStatus === 'connected'
+                          ? 'i-lucide-check-circle'
+                          : backendStatus === 'disconnected'
+                          ? 'i-lucide-x-circle'
+                          : backendStatus === 'checking'
+                          ? 'i-lucide-loader-2'
+                          : 'i-lucide-circle'
+                      "
+                      :class="{ 'animate-spin': backendStatus === 'checking' }"
+                    />
+                  </template>
+                  <span class="group-hover:hidden">{{
+                    backendStatusMessage
+                  }}</span>
+                  <code
+                    class="hidden group-hover:inline text-sm px-2 py-1 rounded"
+                    >{{ useConfigStore().backendURL }}</code
+                  >
+                </UBadge>
+              </div>
+            </div>
           </div>
-
-          <!-- 上传模态框 -->
-          <UModal v-model:open="uploadModalOpen">
-            <UButton label="Open" icon="i-lucide-plus" size="lg">
-              上传应用
-            </UButton>
-
-            <template #content>
-              <UCard>
-                <template #header>
-                  <h3 class="text-lg font-semibold">上传应用</h3>
-                </template>
-
-                <UForm class="space-y-4">
-                  <UFormField label="应用名称" required>
-                    <UInput v-model="uploadForm.name" placeholder="例如: my-app" icon="i-lucide-package" />
-                  </UFormField>
-
-                  <UFormField label="版本号" required>
-                    <UInput v-model="uploadForm.version" placeholder="例如: 1.0.0" icon="i-lucide-git-branch" />
-                  </UFormField>
-
-                  <UFormField label="应用文件" required>
-                    <div class="space-y-2">
-                      <input type="file" accept=".js,.zip" @change="handleFileChange"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-400" />
-                      <p class="text-xs text-gray-500">支持 .js 或 .zip 文件</p>
-                      <p v-if="uploadForm.file" class="text-xs text-primary-600">
-                        已选择: {{ uploadForm.file.name }}
-                      </p>
-                    </div>
-                  </UFormField>
-                </UForm>
-
-                <template #footer>
-                  <div class="flex justify-end gap-2">
-                    <UButton color="neutral" variant="ghost" @click="uploadModalOpen = false">
-                      取消
-                    </UButton>
-                    <UButton :loading="loading" @click="uploadApp">
-                      上传
-                    </UButton>
-                  </div>
-                </template>
-              </UCard>
-            </template>
-          </UModal>
         </div>
       </div>
     </div>
@@ -269,10 +406,92 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold">应用列表</h2>
-                <UBadge color="primary" variant="subtle">
-                  {{ apps.length }}
-                </UBadge>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-lg font-semibold">应用列表</h2>
+                  <UBadge color="primary" variant="subtle">
+                    {{ apps.length }}
+                  </UBadge>
+                </div>
+
+                <!-- 上传模态框 -->
+                <UModal v-model:open="uploadModalOpen">
+                  <UButton label="Open" icon="i-lucide-plus" size="lg">
+                    上传应用
+                  </UButton>
+
+                  <template #content>
+                    <UCard>
+                      <template #header>
+                        <h3 class="text-lg font-semibold">上传应用</h3>
+                      </template>
+
+                      <UForm class="space-y-4">
+                        <UFormField label="应用名称" required>
+                          <UInput
+                            v-model="uploadForm.name"
+                            placeholder="例如: my-app"
+                            icon="i-lucide-package"
+                          />
+                        </UFormField>
+
+                        <UFormField label="版本号" required>
+                          <UInput
+                            v-model="uploadForm.version"
+                            placeholder="例如: 1.0.0"
+                            icon="i-lucide-git-branch"
+                          />
+                        </UFormField>
+
+                        <UFormField label="协议" required>
+                          <USelect
+                            v-model="uploadForm.protocol"
+                            :options="protocols"
+                            placeholder="选择协议"
+                          >
+                          </USelect>
+                        </UFormField>
+
+                        <UFormField label="配置" required>
+                          <div
+                            class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg"
+                          >
+                            <p class="text-xs text-gray-500 mb-2">
+                              填写协议配置参数（JSON格式）
+                            </p>
+                            <!-- <UTextarea
+                        v-model="uploadForm.config"
+                        placeholder='{"root": "/path/to/app"}'
+                        rows="4"
+                      /> -->
+                          </div>
+                        </UFormField>
+
+                        <UFormField label="路径" required>
+                          <UInput
+                            v-model="uploadForm.path"
+                            placeholder="例如: /app/index.js"
+                            icon="i-lucide-folder"
+                          />
+                        </UFormField>
+                      </UForm>
+
+                      <template #footer>
+                        <div class="flex justify-end gap-2">
+                          <UButton
+                            color="neutral"
+                            variant="ghost"
+                            @click="uploadModalOpen = false"
+                          >
+                            取消
+                          </UButton>
+                          <UButton :loading="loading" @click="uploadApp">
+                            上传
+                          </UButton>
+                        </div>
+                      </template>
+                    </UCard>
+                  </template>
+                </UModal>
               </div>
             </template>
 
@@ -281,14 +500,23 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
             </div>
 
             <div v-else-if="apps.length === 0" class="text-center py-8">
-              <UIcon name="i-lucide-package" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-package"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">暂无应用</p>
             </div>
 
             <div v-else class="space-y-2">
-              <UButton v-for="app in apps" :key="app.name" :variant="selectedApp === app.name ? 'soft' : 'ghost'"
-                :color="selectedApp === app.name ? 'primary' : 'neutral'" block class="justify-between"
-                @click="selectApp(app)">
+              <UButton
+                v-for="app in apps"
+                :key="app.name"
+                :variant="selectedApp === app.name ? 'soft' : 'ghost'"
+                :color="selectedApp === app.name ? 'primary' : 'neutral'"
+                block
+                class="justify-between"
+                @click="selectApp(app)"
+              >
                 <span class="flex items-center gap-2">
                   <UIcon name="i-lucide-package" />
                   {{ app.name }}
@@ -313,8 +541,13 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
                   <UBadge color="primary" variant="subtle">
                     {{ versions.length }} 个版本
                   </UBadge>
-                  <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
-                    @click="confirmDelete(selectedApp, 'all')">
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    color="error"
+                    variant="ghost"
+                    size="sm"
+                    @click="confirmDelete(selectedApp, 'all')"
+                  >
                     删除应用
                   </UButton>
                 </div>
@@ -322,7 +555,10 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
             </template>
 
             <div v-if="!selectedApp" class="text-center py-16">
-              <UIcon name="i-lucide-arrow-left" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-arrow-left"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">请从左侧选择一个应用</p>
             </div>
 
@@ -331,16 +567,28 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
             </div>
 
             <div v-else-if="versions.length === 0" class="text-center py-16">
-              <UIcon name="i-lucide-git-branch" class="text-4xl text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-git-branch"
+                class="text-4xl text-gray-400 mb-2"
+              />
               <p class="text-sm text-gray-500">该应用暂无版本</p>
             </div>
 
             <div v-else class="space-y-3">
-              <UCard v-for="version in versions" :key="version" :ui="{ body: 'p-4' }">
+              <UCard
+                v-for="version in versions"
+                :key="version"
+                :ui="{ body: 'p-4' }"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
-                    <div class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg">
-                      <UIcon name="i-lucide-git-branch" class="text-primary-500" />
+                    <div
+                      class="p-2 bg-primary-50 dark:bg-primary-950 rounded-lg"
+                    >
+                      <UIcon
+                        name="i-lucide-git-branch"
+                        class="text-primary-500"
+                      />
                     </div>
                     <div>
                       <p class="font-medium">{{ version }}</p>
@@ -350,12 +598,23 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
                     </div>
                   </div>
                   <div class="flex gap-2">
-                    <UButton :to="appURL(version)" target="_blank" icon="i-lucide-external-link" color="primary"
-                      variant="ghost" size="sm">
+                    <UButton
+                      :to="appURL(version)"
+                      target="_blank"
+                      icon="i-lucide-external-link"
+                      color="primary"
+                      variant="ghost"
+                      size="sm"
+                    >
                       访问
                     </UButton>
-                    <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm"
-                      @click="confirmDelete(selectedApp, version)">
+                    <UButton
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
+                      size="sm"
+                      @click="confirmDelete(selectedApp, version)"
+                    >
                       删除
                     </UButton>
                   </div>
@@ -390,7 +649,11 @@ const appURL = (version: string) => new URL(`/app/${selectedApp.value}/${version
 
           <template #footer>
             <div class="flex justify-end gap-2">
-              <UButton color="neutral" variant="ghost" @click="deleteModalOpen = false">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="deleteModalOpen = false"
+              >
                 取消
               </UButton>
               <UButton color="error" :loading="loading" @click="deleteApp">

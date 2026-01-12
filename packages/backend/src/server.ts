@@ -24,6 +24,7 @@ const mainApp = new Elysia()
           ],
         })
       )
+      .get("/health", () => ({ status: "ok" }))
       // 获取所有应用
       .get("/apps", async () => {
         const apps = await prisma.app.findMany();
