@@ -108,14 +108,14 @@ const uploadForm = ref({
   name: "",
   version: "",
   protocol: "fs" as OpendalSchema,
-  config: "{}",
+  config: {},
   path: "",
 });
 
 const uploadURL = computed(() => {
   return newURL(
     uploadForm.value.protocol,
-    JSON.parse(uploadForm.value.config),
+    uploadForm.value.config,
     uploadForm.value.path
   );
 });
@@ -220,7 +220,7 @@ async function uploadApp() {
       name: "",
       version: "",
       protocol: "fs",
-      config: "{}",
+      config: {},
       path: "",
     };
     await loadApps();
@@ -459,11 +459,19 @@ onMounted(async () => {
                             <p class="text-xs text-gray-500 mb-2">
                               填写协议配置参数（JSON格式）
                             </p>
-                            <UTextarea
+
+                            <!-- <FormKit
+                              label="Username"
+                              type="text"
+                              help="Pick a new username"
+                              validation="required|matches:/^@[a-zA-Z]+$/|length:5"
+                              value="@FormKit"
+                            /> -->
+                            <!-- <UTextarea
                               v-model="uploadForm.config"
                               placeholder='{"root": "/path/to/app"}'
                               class="font-mono w-full"
-                            />
+                            /> -->
                           </div>
                         </UFormField>
                       </UForm>
