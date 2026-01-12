@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { type AppModel } from "elys-pro-backend/src/generated/prisma/internal/prismaNamespace";
+import {
+  type OpendalSchema,
+  schemas,
+} from "elys-pro-backend/src/loader/protocal/opendal/schema";
 
 const { $elysia } = useNuxtApp();
 const toast = useToast();
@@ -36,53 +40,13 @@ async function checkBackendStatus() {
 }
 
 // 支持的协议列表
-const protocols = ref([
-  "azblob",
-  "azdls",
-  "cos",
-  "fs",
-  "gcs",
-  "ghac",
-  "http",
-  "ipmfs",
-  "memory",
-  "obs",
-  "oss",
-  "s3",
-  "webdav",
-  "webhdfs",
-  "aliyun-drive",
-  "cacache",
-  "dashmap",
-  "dropbox",
-  "etcd",
-  "gdrive",
-  "huggingface",
-  "ipfs",
-  "memcached",
-  "mini-moka",
-  "moka",
-  "onedrive",
-  "persy",
-  "postgresql",
-  "koofr",
-  "mysql",
-  "redb",
-  "redis",
-  "sled",
-  "tikv",
-  "vercel-artifacts",
-  "mongodb",
-  "gridfs",
-  "sqlite",
-  "azfile",
-  "swift",
-  "alluxio",
-  "b2",
-  "seafile",
-  "upyun",
-  "yandex-disk",
-]);
+const protocols = ref<{ label: string; value: OpendalSchema; icon: string }[]>(
+  schemas.map((schema) => ({
+    label: schema,
+    value: schema,
+    icon: getProtocolIcon(schema),
+  }))
+);
 
 // 获取协议对应的图标
 function getProtocolIcon(protocol: string): string {
@@ -125,12 +89,8 @@ function encodeOptions(options: Record<string, string>): string {
 }
 
 // 构造完整的 URL
-function constructUrl(
-  protocol: string,
-  config: Record<string, string>,
-  path: string
-): string {
-  const encodedConfig = encodeOptions(config);
+function constructUrl(protocol: string, config: string, path: string): string {
+  const encodedConfig = encodeOptions(JSON.parse(config));
   const url = new URL(path, `${protocol}://${encodedConfig}/`);
   return url.href;
 }
@@ -139,8 +99,8 @@ function constructUrl(
 const uploadForm = ref({
   name: "",
   version: "",
-  protocol: "fs" as string,
-  config: {} as Record<string, string>,
+  protocol: "fs" as OpendalSchema,
+  config: "",
   path: "",
 });
 
@@ -250,7 +210,7 @@ async function uploadApp() {
       name: "",
       version: "",
       protocol: "fs",
-      config: {},
+      config: "",
       path: "",
     };
     await loadApps();
@@ -444,10 +404,20 @@ onMounted(async () => {
 
                         <UFormField label="协议" required>
                           <USelect
+                            width="full"
                             v-model="uploadForm.protocol"
-                            :options="protocols"
+                            :items="protocols"
+                            icon="i-lucide-command"
+                            :ui="{ content: 'min-w-fit' }"
                             placeholder="选择协议"
                           >
+                            <template #leading="{ modelValue, ui }">
+                              <UIcon
+                                v-if="modelValue"
+                                :name="getProtocolIcon(modelValue)"
+                                :class="ui.leadingAvatar()"
+                              />
+                            </template>
                           </USelect>
                         </UFormField>
 
@@ -458,11 +428,10 @@ onMounted(async () => {
                             <p class="text-xs text-gray-500 mb-2">
                               填写协议配置参数（JSON格式）
                             </p>
-                            <!-- <UTextarea
-                        v-model="uploadForm.config"
-                        placeholder='{"root": "/path/to/app"}'
-                        rows="4"
-                      /> -->
+                            <UTextarea
+                              v-model="uploadForm.config"
+                              placeholder='{"root": "/path/to/app"}'
+                            />
                           </div>
                         </UFormField>
 
