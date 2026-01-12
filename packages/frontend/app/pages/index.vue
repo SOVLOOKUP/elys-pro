@@ -4,7 +4,10 @@ import {
   type OpendalSchema,
   schemas,
 } from "../../../backend/src/loader/protocal/opendal/schema";
-import { newURL } from "../../../backend/src/loader/protocal/opendal/utils";
+import {
+  encodeOptions,
+  newURL,
+} from "../../../backend/src/loader/protocal/opendal/utils";
 import { startCase, pascalCase } from "es-toolkit";
 
 const { $elysia } = useNuxtApp();
@@ -411,15 +414,15 @@ onMounted(async () => {
                           />
                         </UFormField>
 
-                        <UFormField label="协议" required>
-                          <span class="flex items-center gap-2">
+                        <UFormField label="来源" required>
+                          <UFieldGroup>
                             <USelect
                               width="full"
                               v-model="uploadForm.protocol"
                               :items="protocols"
                               icon="i-lucide-command"
                               :ui="{ content: 'min-w-fit' }"
-                              placeholder="选择协议"
+                              placeholder="选择来源协议"
                             >
                               <template #leading="{ modelValue, ui }">
                                 <UIcon
@@ -430,9 +433,14 @@ onMounted(async () => {
                               </template>
                             </USelect>
 
+                            <UInput
+                              v-model="uploadForm.path"
+                              placeholder="/app/index.js"
+                            />
+
                             <UButton
-                              variant="ghost"
                               color="neutral"
+                              variant="outline"
                               size="sm"
                               square
                               icon="i-lucide-circle-help"
@@ -441,14 +449,12 @@ onMounted(async () => {
                               )}Config.html`"
                               target="_blank"
                             />
-                          </span>
+                          </UFieldGroup>
                         </UFormField>
 
                         <!-- todo 动态导入表单项 -->
                         <UFormField label="配置" required>
-                          <div
-                            class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg"
-                          >
+                          <div class="rounded-lg">
                             <p class="text-xs text-gray-500 mb-2">
                               填写协议配置参数（JSON格式）
                             </p>
@@ -458,15 +464,6 @@ onMounted(async () => {
                             />
                           </div>
                         </UFormField>
-
-                        <!-- todo opendal 读取后用户选择？ -->
-                        <!-- <UFormField label="路径" required>
-                          <UInput
-                            v-model="uploadForm.path"
-                            placeholder="例如: /app/index.js"
-                            icon="i-lucide-folder"
-                          />
-                        </UFormField> -->
                       </UForm>
 
                       URL: {{ uploadURL }}
