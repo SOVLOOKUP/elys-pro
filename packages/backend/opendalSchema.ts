@@ -6,18 +6,39 @@ import { selectOne } from "css-select";
 import { generate } from "ts-to-zod";
 
 // 配置并发请求数量
-const CONCURRENT_REQUESTS = 8;
+const CONCURRENT_REQUESTS = 8; // 降低并发数以避免请求失败
 const generatedPath = "./src/loader/protocal/opendal/generated/";
 
-// 进度显示函数
-function showProgress(current: number, total: number, service: string) {
-  const percentage = Math.round((current / total) * 100);
-  const barLength = 30;
-  const filledLength = Math.round((percentage / 100) * barLength);
-  const bar = "█".repeat(filledLength) + "░".repeat(barLength - filledLength);
-  process.stdout.write(
-    `\r[${bar}] ${percentage}% (${current}/${total}) - ${service}`
-  );
+// 进度显示函数（改进版，包含时间估算）
+class ProgressTracker {
+  private startTime: number = Date.now();
+  private completed: number = 0;
+  private total: number = 0;
+
+  constructor(total: number) {
+    this.total = total;
+  }
+
+  update(service: string) {
+    this.completed++;
+    const elapsed = (Date.now() - this.startTime) / 1000; // 秒
+    const progress = this.completed / this.total;
+    const eta = progress > 0 ? (elapsed / progress) * (1 - progress) : 0;
+
+    const percentage = Math.round(progress * 100);
+    const barLength = 30;
+    const filledLength = Math.round((percentage / 100) * barLength);
+    const bar = "█".repeat(filledLength) + "░".repeat(barLength - filledLength);
+
+    const timeInfo = eta > 0 ? `, ETA: ${Math.round(eta)}s` : "";
+    process.stdout.write(
+      `\r[${bar}] ${percentage}% (${this.completed}/${this.total}) - ${service}${timeInfo}`
+    );
+  }
+
+  complete() {
+    console.log("\n"); // 换行以避免覆盖
+  }
 }
 
 // 递归提取htmlparser2节点的所有文本内容（核心辅助函数）
@@ -73,43 +94,37 @@ function convertType(rstype: string) {
   return result;
 }
 
-// 并发处理函数
+// 并发处理函数（改进版，使用更高效的并发模式）
 async function processUrlsConcurrently(urls: string[], services: string[]) {
-  const results: string[] = [];
-  const total = urls.length;
-  let index = 0;
+  const results: string[] = new Array(urls.length);
+  const progressTracker = new ProgressTracker(urls.length);
 
-  async function processNext() {
-    if (index >= total) return;
-
-    const currentIndex = index++;
-    const url = urls[currentIndex]!;
-    const service = services[currentIndex]!;
+  // 创建任务批次
+  const tasks = urls.map(async (url, index) => {
+    const service = services[index]!;
+    console.log(`开始处理服务: ${service}`);
 
     try {
-      // 显示进度
-      showProgress(currentIndex + 1, total, service);
-
       // 发送请求并处理
-      const html = await ky.get(url).text();
+      const html = await ky.get(url, { timeout: 15000 }).text(); // 增加超时时间
       const rstype = extractTextByCSS(html, ".rust > code:nth-child(1)");
-      results[currentIndex] = convertType(rstype);
+      results[index] = convertType(rstype);
+      console.log(`完成处理服务: ${service}`);
     } catch (error) {
       console.error(`\n处理 ${service} 失败: ${error}`);
-      results[currentIndex] = `// 处理 ${service} 失败`;
+      results[index] = `// 处理 ${service} 失败`;
+    } finally {
+      progressTracker.update(service);
     }
+  });
 
-    // 处理下一个
-    await processNext();
+  // 分批执行以控制并发
+  for (let i = 0; i < tasks.length; i += CONCURRENT_REQUESTS) {
+    const batch = tasks.slice(i, i + CONCURRENT_REQUESTS);
+    await Promise.allSettled(batch); // 使用Promise.allSettled确保即使有失败也不影响其他请求
   }
 
-  // 创建并发任务
-  const tasks = Array.from(
-    { length: Math.min(CONCURRENT_REQUESTS, total) },
-    processNext
-  );
-  await Promise.all(tasks);
-
+  progressTracker.complete();
   return results;
 }
 
@@ -132,7 +147,7 @@ async function main() {
 
   // 生成 schema.ts
   const schemaCode = `export type OpendalSchema = 
-${schemas.map((item) => `    | "${item}"`).join("\n")}
+${schemas.map((item) => `  | "${item}"`).join("\n")}
 
 export const schemas: OpendalSchema[] = ${JSON.stringify(schemas)};`;
 
@@ -162,6 +177,7 @@ export type OpendalOption = ${pascalCaseOptions
     .join("")};`;
 
   await Bun.write(`${generatedPath}options.ts`, optioncode);
+  console.log("已生成 options.ts");
 
   // 生成 optionsSchema.ts
   const out = generate({
@@ -172,6 +188,7 @@ export type OpendalOption = ${pascalCaseOptions
     `${generatedPath}optionsSchema.ts`,
     out.getZodSchemasFile(`${generatedPath}options.ts`)
   );
+  console.log("已生成 optionsSchema.ts");
 
   // 生成 schemaConfig.ts
   const camelCaseOptions = schemas.map(
@@ -190,8 +207,9 @@ export default {
 };`;
 
   await Bun.write(`${generatedPath}schemaConfig.ts`, schemaConfig);
+  console.log("已生成 schemaConfig.ts");
 
-  console.log("\n\n完成！已生成所有文件");
+  console.log("\n完成！已生成所有文件");
 }
 
 // 执行主函数

@@ -4,13 +4,14 @@ import {
   type OpendalSchema,
   schemas,
 } from "backend/src/loader/protocal/opendal/generated/schema";
-import { fsConfigSchema } from "backend/src/loader/protocal/opendal/generated/optionsSchema";
+import schemaConfig from "backend/src/loader/protocal/opendal/generated/schemaConfig";
 import { newURL } from "backend/src/loader/protocal/opendal/utils";
 import { startCase, pascalCase } from "es-toolkit";
 
 const clipboard = useClipboard();
 const { $elysia } = useNuxtApp();
 const toast = useToast();
+const { afz } = useAutoForm();
 
 // 状态管理
 const apps = ref<AppModel[]>([]);
@@ -111,6 +112,12 @@ const uploadForm = ref({
   protocol: "fs" as OpendalSchema,
   config: {},
   path: "",
+});
+
+const schema = computed(() => {
+  const targetSchema = schemaConfig[uploadForm.value.protocol];
+
+  return targetSchema;
 });
 
 const uploadURL = computed(() => {
@@ -385,7 +392,7 @@ onMounted(async () => {
                 </div>
 
                 <!-- 上传模态框 -->
-                <UModal v-model:open="uploadModalOpen">
+                <UModal scrollable v-model:open="uploadModalOpen">
                   <UButton label="Open" icon="i-lucide-plus" size="lg">
                     上传应用
                   </UButton>
@@ -454,7 +461,7 @@ onMounted(async () => {
                           </UFieldGroup>
                         </UFormField>
 
-                        <!-- todo 动态使用表单组件 -->
+                        <!-- 动态使用表单组件 -->
                         <UFormField label="协议配置">
                           <div class="w-full rounded-lg">
                             <p class="text-xs text-gray-500 mb-2">
@@ -465,7 +472,7 @@ onMounted(async () => {
                                 class="space-y-2"
                                 :submitButton="false"
                                 :state="uploadForm.config"
-                                :schema="fsConfigSchema"
+                                :schema="schema"
                               />
                             </UCard>
                           </div>
