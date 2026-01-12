@@ -4,12 +4,10 @@ import {
   type OpendalSchema,
   schemas,
 } from "../../../backend/src/loader/protocal/opendal/schema";
-import {
-  encodeOptions,
-  newURL,
-} from "../../../backend/src/loader/protocal/opendal/utils";
+import { newURL } from "../../../backend/src/loader/protocal/opendal/utils";
 import { startCase, pascalCase } from "es-toolkit";
 
+const clipboard = useClipboard();
 const { $elysia } = useNuxtApp();
 const toast = useToast();
 
@@ -452,7 +450,7 @@ onMounted(async () => {
                           </UFieldGroup>
                         </UFormField>
 
-                        <!-- todo 动态导入表单项 -->
+                        <!-- todo 动态使用表单组件 -->
                         <UFormField label="配置" required>
                           <div class="rounded-lg">
                             <p class="text-xs text-gray-500 mb-2">
@@ -466,7 +464,35 @@ onMounted(async () => {
                         </UFormField>
                       </UForm>
 
-                      URL: {{ uploadURL }}
+                      <!-- 链接预览 -->
+                      <div
+                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                      >
+                        <p class="text-xs text-gray-500 mb-1">
+                          解析后的访问地址
+                        </p>
+                        <div class="flex items-center gap-2">
+                          <UIcon name="i-lucide-link-2" class="text-gray-400" />
+                          <code
+                            class="text-sm text-gray-700 dark:text-gray-300 break-all"
+                            >{{ uploadURL }}</code
+                          >
+                          <UButton
+                            color="neutral"
+                            variant="ghost"
+                            size="xs"
+                            square
+                            icon="i-lucide-copy"
+                            @click="
+                              clipboard.copy(uploadURL);
+                              toast.add({
+                                title: '已复制到剪贴板',
+                                color: 'success',
+                              });
+                            "
+                          />
+                        </div>
+                      </div>
 
                       <template #footer>
                         <div class="flex justify-end gap-2">
