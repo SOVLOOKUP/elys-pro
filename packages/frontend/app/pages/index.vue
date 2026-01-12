@@ -5,6 +5,7 @@ import {
   schemas,
 } from "elys-pro-backend/src/loader/protocal/opendal/schema";
 import { newURL } from "elys-pro-backend/src/loader/protocal/opendal/utils";
+import { startCase } from "es-toolkit";
 
 const { $elysia } = useNuxtApp();
 const toast = useToast();
@@ -43,7 +44,7 @@ async function checkBackendStatus() {
 // 支持的协议列表
 const protocols = ref<{ label: string; value: OpendalSchema; icon: string }[]>(
   schemas.map((schema) => ({
-    label: schema,
+    label: startCase(schema),
     value: schema,
     icon: getProtocolIcon(schema),
   }))
