@@ -1,5 +1,5 @@
 import { Operator } from "opendal";
-import { schemas } from "./schema";
+import { schemas } from "./generated/schema";
 import { addProtocol } from "..";
 import { decodeOptions } from "./utils";
 

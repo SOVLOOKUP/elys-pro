@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "build": "bun run build/index.ts",
-    "opendal": "bun run opendalSchema.ts && bunx ts-to-zod src/loader/protocal/opendal/options.ts src/loader/protocal/opendal/optionsSchema.ts",
+    "opendal": "bun run opendalSchema.ts && bunx ts-to-zod src/loader/protocal/opendal/options.ts src/loader/protocal/opendal/generated/optionsSchema.ts",
     "prisma:studio": "bunx --bun prisma studio",
     "dbupdate": "bun prisma:migrate && bun prisma:generate",
     "prisma:migrate": "bunx --bun prisma migrate dev --name",

@@ -1,5 +1,5 @@
-import type { OpendalSchema } from "./schema";
-import type { OpendalOption } from "./options";
+import type { OpendalSchema } from "./generated/schema";
+import type { OpendalOption } from "./generated/options";
 
 // 使用 base64 将 options 编码
 export const encodeOptions = (options: Record<string, string>) => {

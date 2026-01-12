@@ -3,9 +3,9 @@ import type { AppModel } from "backend/src/generated/prisma/internal/prismaNames
 import {
   type OpendalSchema,
   schemas,
-} from "backend/src/loader/protocal/opendal/schema";
+} from "backend/src/loader/protocal/opendal/generated/schema";
+import { fsConfigSchema } from "backend/src/loader/protocal/opendal/generated/optionsSchema";
 import { newURL } from "backend/src/loader/protocal/opendal/utils";
-import { fsConfigSchema } from "backend/src/loader/protocal/opendal/optionsSchema";
 import { startCase, pascalCase } from "es-toolkit";
 
 const clipboard = useClipboard();
@@ -464,8 +464,8 @@ onMounted(async () => {
                               <MAutoForm
                                 class="space-y-2"
                                 :submitButton="false"
-                                :schema="fsConfigSchema"
                                 :state="uploadForm.config"
+                                :schema="fsConfigSchema"
                               />
                             </UCard>
                           </div>

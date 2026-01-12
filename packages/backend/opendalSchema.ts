@@ -134,7 +134,10 @@ ${schemas.map((item) => `    | "${item}"`).join("\n")}
 
 export const schemas: OpendalSchema[] = ${JSON.stringify(schemas)};`;
 
-  await Bun.write("./src/loader/protocal/opendal/schema.ts", schemaCode);
+  await Bun.write(
+    "./src/loader/protocal/opendal/generated/schema.ts",
+    schemaCode
+  );
   console.log("\n已生成 schema.ts");
 
   // 处理 options
@@ -158,7 +161,10 @@ export type OpendalOption = ${pascalCaseOptions
     .map((item) => `\n  | ${item}Config`)
     .join("")};`;
 
-  await Bun.write("./src/loader/protocal/opendal/options.ts", optioncode);
+  await Bun.write(
+    "./src/loader/protocal/opendal/generated/options.ts",
+    optioncode
+  );
   console.log("\n\n完成！已生成所有文件");
 }
 
