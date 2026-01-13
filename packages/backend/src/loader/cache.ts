@@ -1,5 +1,6 @@
-// 若没有 redis 则用 sqlite 缓存
+// 若没有 redis 则用文件缓存
 import Keyv, { type KeyvStoreAdapter } from "keyv";
+// todo 贡献一个 zstd 压缩
 import KeyvBrotli from "@keyv/compress-brotli";
 import { KeyvFile } from "keyv-file";
 import KeyvValkey from "@keyv/valkey";
@@ -19,6 +20,11 @@ export const getCacheIfExistNorSet = async (
   args: Bun.OnLoadArgs,
   callback: Bun.OnLoadCallback
 ) => {
+  // 非生产环境不缓存
+  if (Bun.env.NODE_ENV !== "production") {
+    return callback(args);
+  }
+
   const { namespace, path } = args;
   const cacheKey = `${namespace}:${path}`;
 

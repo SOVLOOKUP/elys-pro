@@ -21,7 +21,15 @@ export const more_imports: BunPlugin = {
     // 使用自定义方法解析指定协议导入
     for (const [protocol, callback] of protocols) {
       const namespace = protocol.replace(":", "");
-      build.onLoad({ filter: /./, namespace }, (args) =>
+
+      // add namespace
+      build.onResolve({ filter: /.*/, namespace }, (args) => ({
+        path: args.path,
+        namespace,
+      }));
+
+      // 加载指定协议导入的内容
+      build.onLoad({ filter: /.*/, namespace }, (args) =>
         getCacheIfExistNorSet(args, callback)
       );
     }

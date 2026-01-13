@@ -1,4 +1,5 @@
 import { isPlainObject } from "es-toolkit";
+import path from "path";
 
 /** https://bun.com/docs/bundler/loaders */
 type Loader = Parameters<Bun.OnLoadCallback>["0"]["loader"];
@@ -21,12 +22,8 @@ const loader = new Set<Loader>([
 
 // 获取后缀，或是默认返回js
 const getLoader = (href: string): Loader => {
-  const match = href.match(/\.([^.]+)$/);
-  if (match && match[1]) {
-    const ext = match[1].toLowerCase() as Loader;
-    return loader.has(ext) ? ext : "js";
-  }
-  return "js";
+  const ext = (path.extname(href).replace(".", "") as Loader) ?? "js";
+  return loader.has(ext) ? ext : "js";
 };
 
 type Contents =
