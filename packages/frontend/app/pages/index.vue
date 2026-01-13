@@ -11,7 +11,7 @@ import { startCase, pascalCase } from "es-toolkit";
 const clipboard = useClipboard();
 const { $elysia } = useNuxtApp();
 const toast = useToast();
-const { afz } = useAutoForm();
+const defaultSchema: OpendalSchema = "http";
 
 // 状态管理
 const apps = ref<AppModel[]>([]);
@@ -109,7 +109,7 @@ function getProtocolIcon(protocol: OpendalSchema): string {
 const uploadForm = ref({
   name: "",
   version: "",
-  protocol: "fs" as OpendalSchema,
+  protocol: defaultSchema as OpendalSchema,
   config: {},
   path: "",
 });
@@ -226,7 +226,7 @@ async function uploadApp() {
     uploadForm.value = {
       name: "",
       version: "",
-      protocol: "fs",
+      protocol: defaultSchema,
       config: {},
       path: "",
     };
