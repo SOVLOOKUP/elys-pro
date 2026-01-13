@@ -1,6 +1,6 @@
 // 若没有 redis 则用 sqlite 缓存
 import Keyv, { type KeyvStoreAdapter } from "keyv";
-import KeyvGzip from "@keyv/compress-gzip";
+import KeyvBrotli from "@keyv/compress-brotli";
 import { KeyvFile } from "keyv-file";
 import KeyvValkey from "@keyv/valkey";
 
@@ -12,7 +12,7 @@ if (Bun.env.VALKEY_URL) {
   store = new KeyvFile();
 }
 
-const keyv = new Keyv({ store, compression: new KeyvGzip() });
+const keyv = new Keyv({ store, compression: new KeyvBrotli() });
 
 // 缓存模块
 export const getCacheIfExistNorSet = async (

@@ -28,4 +28,4 @@ export const more_imports: BunPlugin = {
   },
 };
 
-// await Bun.plugin(more_imports);
+await Bun.plugin(more_imports);
