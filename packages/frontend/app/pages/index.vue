@@ -1,4 +1,7 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: "dashboard",
+});
 import type { AppModel } from "backend/src/generated/prisma/internal/prismaNamespace";
 import {
   type OpendalSchema,
@@ -319,6 +322,7 @@ onMounted(async () => {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex flex-col gap-4">
           <!-- 标题和上传按钮 -->
+          <!-- todo 改成header -->
           <div class="flex items-center justify-between">
             <div>
               <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
