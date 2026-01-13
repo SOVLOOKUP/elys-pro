@@ -1,3 +1,5 @@
+import "../loader";
+
 addEventListener("message", async (event) => {
   const { type, data } = event.data;
 

@@ -77,7 +77,7 @@ const mainApp = new Elysia()
             async ({ params, body, query }) => {
               const name = params.name;
               const version = query.version;
-              const url = body.url;
+              const url = decodeURI(body.url);
 
               // 校验应用是否符合规范
               const validationResult = await new Promise<{
