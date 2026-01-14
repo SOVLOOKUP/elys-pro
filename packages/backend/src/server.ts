@@ -10,6 +10,7 @@ import {
 } from "./loader/protocal/opendal/generated/schema";
 import { AppInputCreate, AppWhereUnique } from "./generated/prismabox/App";
 import { encodeOptions, newURL } from "./loader/protocal/opendal/utils";
+import { Operator } from "opendal";
 
 // 生产前端地址
 const frontend_origin =
@@ -176,6 +177,39 @@ const mainApp = new Elysia()
             const result = await prisma.store.findMany();
             return result;
           })
+          .post(
+            "/testConnection",
+            async ({ body }) => {
+              const op = new Operator(body.schema, body.config);
+
+              // 使用 Promise.race 实现超时控制
+              try {
+                const timeoutPromise = new Promise((_, reject) => {
+                  setTimeout(
+                    () => reject(new Error("Connection test timeout")),
+                    3000
+                  ); // 3秒超时
+                });
+
+                const checkPromise = op.check();
+
+                await Promise.race([checkPromise, timeoutPromise]);
+
+                return { status: "success" };
+              } catch (error) {
+                // 确保错误信息是字符串类型，避免类型错误
+                const errorMessage =
+                  error instanceof Error ? error.message : String(error);
+                return { status: "error", message: errorMessage };
+              }
+            },
+            {
+              body: t.Object({
+                schema: t.Enum(Object.fromEntries(schemas.map((i) => [i, i]))),
+                config: t.Record(t.String(), t.String()),
+              }),
+            }
+          )
           .get("/:store", async ({ params }) => {
             const result = await prisma.store.findUnique({
               where: {
