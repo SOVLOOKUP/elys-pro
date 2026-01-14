@@ -22,6 +22,7 @@ const loading = ref(false);
 const uploadModalOpen = ref(false);
 const deleteModalOpen = ref(false);
 const appToDelete = ref<{ name: string; version: string | "all" } | null>(null);
+const stores = ref<any[]>([]);
 
 // 请求状态
 const lastRequestStatus = ref<"idle" | "loading" | "success" | "error">("idle");
@@ -94,6 +95,7 @@ const uploadForm = ref({
   protocol: defaultSchema as OpendalSchema,
   config: {},
   path: "",
+  storeId: "", // 新增 store 选择字段
 });
 
 const schema = computed(() => {
@@ -167,6 +169,7 @@ async function uploadApp() {
   if (
     !uploadForm.value.name ||
     !uploadForm.value.version ||
+    !uploadForm.value.storeId ||
     !uploadForm.value.protocol ||
     !uploadForm.value.path
   ) {
@@ -180,9 +183,9 @@ async function uploadApp() {
 
   loading.value = true;
   try {
-    // 使用类型断言避免类型错误，实际API结构可能需要后端定义
+    // 使用选定的 store ID
     await $elysia.api.app({ name: uploadForm.value.name }).post({
-      storeId: "todo",
+      storeId: uploadForm.value.storeId,
       path: uploadForm.value.path,
       version: uploadForm.value.version,
     });
@@ -200,6 +203,7 @@ async function uploadApp() {
       protocol: defaultSchema,
       config: {},
       path: "",
+      storeId: "",
     };
     await loadApps();
     if (selectedApp.value) {
@@ -267,10 +271,25 @@ const appURL = (version: string) =>
   new URL(`/app/${selectedApp.value}/${version}/`, useConfigStore().backendURL)
     .href;
 
+// 加载可用的 store 列表
+async function loadStores() {
+  try {
+    const response = await $elysia.api.store.get();
+    stores.value = response.data || [];
+  } catch (error) {
+    console.error("Failed to load stores:", error);
+    toast.add({
+      title: "加载失败",
+      description: "无法获取存储列表",
+      color: "warning",
+    });
+  }
+}
+
 // 初始化
 onMounted(async () => {
-  // 加载应用列表
-  await loadApps();
+  // 并行加载应用列表和 store 列表
+  await Promise.all([loadApps(), loadStores()]);
 });
 </script>
 
@@ -330,43 +349,44 @@ onMounted(async () => {
                         </UFormField>
 
                         <UFormField label="应用来源" required>
-                          <UFieldGroup class="w-full">
-                            <!-- todo 选择 store -->
-                            <USelect
-                              width="full"
-                              v-model="uploadForm.protocol"
-                              :items="protocols"
-                              icon="i-lucide-command"
-                              :ui="{ content: 'min-w-fit' }"
-                              placeholder="选择来源协议"
-                            >
-                              <template #leading="{ modelValue, ui }">
-                                <UIcon
-                                  v-if="modelValue"
-                                  :name="getProtocolIcon(modelValue)"
-                                  :class="ui.leadingAvatar()"
-                                />
-                              </template>
-                            </USelect>
+                          <div class="space-y-3">
+                            <!-- 协议和路径 -->
+                            <UFieldGroup class="w-full">
+                              <USelect
+                                width="full"
+                                v-model="uploadForm.storeId"
+                                :items="
+                                  stores.map((s) => ({
+                                    label: s.name,
+                                    value: s.id,
+                                    icon: getProtocolIcon(s.schema),
+                                  }))
+                                "
+                                :ui="{ content: 'min-w-fit' }"
+                                placeholder="选择存储"
+                                :disabled="stores.length === 0"
+                              />
 
-                            <UInput
-                              v-model="uploadForm.path"
-                              placeholder="路径(例如：/app/index.js)"
-                              class="font-mono w-full"
-                            />
+                              <UInput
+                                v-model="uploadForm.path"
+                                placeholder="路径(例如：/app/index.js)"
+                                class="font-mono w-full"
+                                :disabled="!uploadForm.storeId"
+                              />
 
-                            <UButton
-                              color="neutral"
-                              variant="outline"
-                              size="sm"
-                              square
-                              icon="i-lucide-circle-help"
-                              :to="`https://docs.rs/opendal/latest/opendal/services/struct.${pascalCase(
-                                uploadForm.protocol
-                              )}Config.html`"
-                              target="_blank"
-                            />
-                          </UFieldGroup>
+                              <UButton
+                                color="neutral"
+                                variant="outline"
+                                size="sm"
+                                square
+                                icon="i-lucide-circle-help"
+                                :to="`https://docs.rs/opendal/latest/opendal/services/struct.${pascalCase(
+                                  uploadForm.protocol
+                                )}Config.html`"
+                                target="_blank"
+                              />
+                            </UFieldGroup>
+                          </div>
                         </UFormField>
                       </UForm>
 

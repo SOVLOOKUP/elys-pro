@@ -1,5 +1,6 @@
 import type { OpendalSchema } from "./generated/schema";
 import type { OpendalOption } from "./generated/options";
+import { normalize, isAbsolute } from "path";
 
 // 使用 base64 将 options 编码
 export const encodeOptions = (options: Record<string, string>) => {
@@ -17,9 +18,8 @@ export const newURL = (
   options: Record<string, string>,
   path: string
 ) => {
-  const url = new URL(path, `${schema}://${encodeOptions(options)}/`);
-
-  return url.href;
+  const p = isAbsolute(path) ? normalize(path) : normalize(`/${path}`);
+  return `${schema}://${encodeOptions(options)}${p}`;
 };
 
 // 使用 base64 将 options 解码

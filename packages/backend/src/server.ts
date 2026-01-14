@@ -84,7 +84,6 @@ const mainApp = new Elysia()
             async ({ params, body }) => {
               const name = params.name;
               const version = body.version;
-              const path = decodeURIComponent(body.path);
 
               const store = await prisma.store.findUnique({
                 where: {
@@ -99,7 +98,7 @@ const mainApp = new Elysia()
               const url = newURL(
                 store.schema as OpendalSchema,
                 store.config as Record<string, string>,
-                path
+                body.path
               );
 
               // 校验应用是否符合规范
@@ -154,7 +153,7 @@ const mainApp = new Elysia()
                   data: {
                     name,
                     version,
-                    path,
+                    path: body.path,
                     storeId: body.storeId,
                   },
                 });
@@ -339,7 +338,7 @@ const startServer = async () => {
           ? request.url
           : request.url.replace("http", "https");
 
-        target.searchParams.set("backendURL", encodeURIComponent(backendURL));
+        target.searchParams.set("backendURL", atob(backendURL));
 
         // 跳转到前端地址
         return Response.redirect(target.href, 302);
