@@ -24,14 +24,7 @@
   <UFormField label="协议配置">
     <div class="w-full rounded-lg">
       <p class="text-xs text-gray-500 mb-2">填写协议配置参数</p>
-      <UCard>
-        <MAutoForm
-          class="space-y-2"
-          :submitButton="false"
-          :state="uploadForm.config"
-          :schema="schema"
-        />
-      </UCard>
+      <SchemaConfigForm :modelValue="uploadForm" />
     </div>
   </UFormField>
 </template>
@@ -41,7 +34,6 @@ import {
   type OpendalSchema,
   schemas,
 } from "backend/src/loader/protocal/opendal/generated/schema";
-import schemaConfig from "backend/src/loader/protocal/opendal/generated/schemaConfig";
 import { startCase } from "es-toolkit";
 
 const defaultSchema: OpendalSchema = "http";
@@ -118,10 +110,5 @@ const uploadForm = ref({
   protocol: defaultSchema as OpendalSchema,
   config: {},
   path: "",
-});
-
-const schema = computed(() => {
-  const targetSchema = schemaConfig[uploadForm.value.protocol];
-  return targetSchema;
 });
 </script>
