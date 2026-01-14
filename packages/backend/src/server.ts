@@ -4,6 +4,12 @@ import { maxSatisfying } from "semver";
 import cors from "@elysiajs/cors";
 import { prisma } from "./db";
 import type { App } from "./generated/prisma/client";
+import {
+  schemas,
+  type OpendalSchema,
+} from "./loader/protocal/opendal/generated/schema";
+import { AppInputCreate, AppWhereUnique } from "./generated/prismabox/App";
+import { encodeOptions, newURL } from "./loader/protocal/opendal/utils";
 
 // 生产前端地址
 const frontend_origin =
@@ -25,16 +31,16 @@ const mainApp = new Elysia()
         })
       )
       .get("/health", () => ({ status: "ok" }))
-      // 获取所有应用
-      .get("/apps", async () => {
-        const apps = await prisma.app.findMany();
-        return apps;
-      })
       // 应用管理
       .group("/app", (app) =>
         app
+          .get("/", async () => {
+            const apps = await prisma.app.findMany();
+            return apps;
+          })
           // 获取应用所有版本
           .get("/:name", async ({ params }) => {
+            // 获取所有应用
             const apps = await prisma.app.findMany({
               where: {
                 name: params.name,
@@ -77,7 +83,23 @@ const mainApp = new Elysia()
             async ({ params, body, query }) => {
               const name = params.name;
               const version = query.version;
-              const url = decodeURI(body.url);
+              const path = decodeURIComponent(body.path);
+
+              const store = await prisma.store.findUnique({
+                where: {
+                  id: body.storeId,
+                },
+              });
+
+              if (!store) {
+                return new NotFoundError(`Store ${body.storeId} not found`);
+              }
+
+              const url = newURL(
+                store.schema as OpendalSchema,
+                store.config as Record<string, string>,
+                path
+              );
 
               // 校验应用是否符合规范
               const validationResult = await new Promise<{
@@ -131,7 +153,8 @@ const mainApp = new Elysia()
                   data: {
                     name,
                     version,
-                    url,
+                    path,
+                    storeId: body.storeId,
                   },
                 });
                 return app;
@@ -139,12 +162,60 @@ const mainApp = new Elysia()
             },
             {
               body: t.Object({
-                url: t.String({
-                  format: "uri",
-                }),
+                path: t.String(),
+                storeId: t.String(),
               }),
               query: t.Object({
                 version: t.String(),
+              }),
+            }
+          )
+      )
+      // 存储管理
+      .group("/store", (app) =>
+        app
+          .get("/", async () => {
+            const result = await prisma.store.findMany();
+            return result;
+          })
+          .get("/:store", async ({ params }) => {
+            const result = await prisma.store.findUnique({
+              where: {
+                name: params.store,
+              },
+            });
+            return result;
+          })
+          .post(
+            "/:store",
+            async ({ params, body }) => {
+              return await prisma.store.create({
+                data: {
+                  name: params.store,
+                  schema: body.schema,
+                  config: body.config,
+                },
+              });
+            },
+            {
+              body: t.Object({
+                schema: t.Union(schemas.map((i) => t.Literal(i))),
+                config: t.Record(t.String(), t.String()),
+              }),
+            }
+          )
+          .delete(
+            "/:store",
+            async ({ params }) => {
+              return await prisma.store.delete({
+                where: {
+                  name: params.store,
+                },
+              });
+            },
+            {
+              query: t.Object({
+                name: t.String(),
               }),
             }
           )
@@ -190,7 +261,23 @@ const mainApp = new Elysia()
         targetApp = app;
       }
 
-      const appModule = await import(targetApp.url);
+      const store = await prisma.store.findUnique({
+        where: {
+          id: targetApp.storeId,
+        },
+      });
+
+      if (!store) {
+        return new NotFoundError(`Store ${targetApp.storeId} not found`);
+      }
+
+      const url = newURL(
+        store.schema as OpendalSchema,
+        store.config as Record<string, string>,
+        targetApp.path
+      );
+
+      const appModule = await import(url);
 
       const app = new Elysia({
         prefix: `/app/${req.params.name}/${req.params.version}`,

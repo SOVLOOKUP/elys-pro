@@ -19,9 +19,6 @@ for (const schema of schemas) {
 
     const op = new Operator(schema, parsedOptions);
 
-    // 测试可否连通
-    await op.check();
-
     // 读取内容
     const data = await op.read(path);
 

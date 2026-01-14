@@ -14,7 +14,7 @@ export const AppPlain = t.Object(
     updatedAt: t.Date(),
     storeId: t.String(),
   },
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppRelations = t.Object(
@@ -28,15 +28,15 @@ export const AppRelations = t.Object(
         createdAt: t.Date(),
         updatedAt: t.Date(),
       },
-      { additionalProperties: false },
+      { additionalProperties: false }
     ),
   },
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppPlainInputCreate = t.Object(
   { name: t.String(), version: t.String(), path: t.String() },
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppPlainInputUpdate = t.Object(
@@ -45,7 +45,7 @@ export const AppPlainInputUpdate = t.Object(
     version: t.Optional(t.String()),
     path: t.Optional(t.String()),
   },
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppRelationsInputCreate = t.Object(
@@ -56,13 +56,13 @@ export const AppRelationsInputCreate = t.Object(
           {
             id: t.String({ additionalProperties: false }),
           },
-          { additionalProperties: false },
+          { additionalProperties: false }
         ),
       },
-      { additionalProperties: false },
+      { additionalProperties: false }
     ),
   },
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppRelationsInputUpdate = t.Partial(
@@ -74,14 +74,14 @@ export const AppRelationsInputUpdate = t.Partial(
             {
               id: t.String({ additionalProperties: false }),
             },
-            { additionalProperties: false },
+            { additionalProperties: false }
           ),
         },
-        { additionalProperties: false },
+        { additionalProperties: false }
       ),
     },
-    { additionalProperties: false },
-  ),
+    { additionalProperties: false }
+  )
 );
 
 export const AppWhere = t.Partial(
@@ -100,10 +100,10 @@ export const AppWhere = t.Partial(
           updatedAt: t.Date(),
           storeId: t.String(),
         },
-        { additionalProperties: false },
+        { additionalProperties: false }
       ),
-    { $id: "App" },
-  ),
+    { $id: "App" }
+  )
 );
 
 export const AppWhereUnique = t.Recursive(
@@ -117,12 +117,12 @@ export const AppWhereUnique = t.Recursive(
               name: t.String(),
               name_version: t.Object(
                 { name: t.String(), version: t.String() },
-                { additionalProperties: false },
+                { additionalProperties: false }
               ),
             },
-            { additionalProperties: false },
+            { additionalProperties: false }
           ),
-          { additionalProperties: false },
+          { additionalProperties: false }
         ),
         t.Union(
           [
@@ -131,11 +131,11 @@ export const AppWhereUnique = t.Recursive(
             t.Object({
               name_version: t.Object(
                 { name: t.String(), version: t.String() },
-                { additionalProperties: false },
+                { additionalProperties: false }
               ),
             }),
           ],
-          { additionalProperties: false },
+          { additionalProperties: false }
         ),
         t.Partial(
           t.Object({
@@ -149,7 +149,7 @@ export const AppWhereUnique = t.Recursive(
             ]),
             OR: t.Array(Self, { additionalProperties: false }),
           }),
-          { additionalProperties: false },
+          { additionalProperties: false }
         ),
         t.Partial(
           t.Object(
@@ -162,13 +162,13 @@ export const AppWhereUnique = t.Recursive(
               updatedAt: t.Date(),
               storeId: t.String(),
             },
-            { additionalProperties: false },
-          ),
+            { additionalProperties: false }
+          )
         ),
       ],
-      { additionalProperties: false },
+      { additionalProperties: false }
     ),
-  { $id: "App" },
+  { $id: "App" }
 );
 
 export const AppSelect = t.Partial(
@@ -184,15 +184,15 @@ export const AppSelect = t.Partial(
       store: t.Boolean(),
       _count: t.Boolean(),
     },
-    { additionalProperties: false },
-  ),
+    { additionalProperties: false }
+  )
 );
 
 export const AppInclude = t.Partial(
   t.Object(
     { store: t.Boolean(), _count: t.Boolean() },
-    { additionalProperties: false },
-  ),
+    { additionalProperties: false }
+  )
 );
 
 export const AppOrderBy = t.Partial(
@@ -220,8 +220,8 @@ export const AppOrderBy = t.Partial(
         additionalProperties: false,
       }),
     },
-    { additionalProperties: false },
-  ),
+    { additionalProperties: false }
+  )
 );
 
 export const App = t.Composite([AppPlain, AppRelations], {
@@ -230,10 +230,10 @@ export const App = t.Composite([AppPlain, AppRelations], {
 
 export const AppInputCreate = t.Composite(
   [AppPlainInputCreate, AppRelationsInputCreate],
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
 
 export const AppInputUpdate = t.Composite(
   [AppPlainInputUpdate, AppRelationsInputUpdate],
-  { additionalProperties: false },
+  { additionalProperties: false }
 );
