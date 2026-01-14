@@ -15,6 +15,7 @@ datasource db {
   provider = "sqlite"
 }
 
+// 应用
 model App {
   id      String @id @default(ulid())
   name    String @unique
@@ -30,6 +31,7 @@ model App {
   @@unique([name, version])
 }
 
+// 存储来源
 model Store {
   id   String @id @default(ulid())
   name String @unique
