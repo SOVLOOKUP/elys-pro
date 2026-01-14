@@ -28,25 +28,6 @@ const appToDelete = ref<{ name: string; version: string | "all" } | null>(null);
 // 请求状态
 const lastRequestStatus = ref<"idle" | "loading" | "success" | "error">("idle");
 
-// 后端连接状态
-const backendStatus = ref<"checking" | "connected" | "disconnected">(
-  "checking"
-);
-
-const backendStatusMessage = ref("正在检查后端连接...");
-
-// 检查后端连接状态
-async function checkBackendStatus() {
-  try {
-    await $elysia.api.health.get();
-    backendStatus.value = "connected";
-    backendStatusMessage.value = "后端连接正常";
-  } catch (error) {
-    backendStatus.value = "disconnected";
-    backendStatusMessage.value = "后端连接失败";
-  }
-}
-
 // 支持的协议列表
 const protocols = ref<{ label: string; value: OpendalSchema; icon: string }[]>(
   schemas.map((schema) => ({
@@ -305,9 +286,6 @@ const appURL = (version: string) =>
 
 // 初始化
 onMounted(async () => {
-  // 检查后端连接状态
-  await checkBackendStatus();
-
   // 加载应用列表
   await loadApps();
 });
@@ -315,70 +293,6 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
-    <div
-      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
-    >
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex flex-col gap-4">
-          <!-- 标题和上传按钮 -->
-          <!-- todo 改成header -->
-          <div class="flex items-center justify-between">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                Elysia 应用管理
-              </h1>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                管理和部署你的 Elysia 应用
-              </p>
-            </div>
-
-            <!-- 后端连接状态 -->
-            <div class="relative flex items-center justify-between">
-              <!-- 连接状态指示器 -->
-              <div class="flex items-center gap-2 group">
-                <UBadge
-                  :color="
-                    backendStatus === 'connected'
-                      ? 'success'
-                      : backendStatus === 'disconnected'
-                      ? 'error'
-                      : backendStatus === 'checking'
-                      ? 'warning'
-                      : 'neutral'
-                  "
-                  variant="subtle"
-                  class="relative group"
-                >
-                  <template #icon>
-                    <UIcon
-                      :name="
-                        backendStatus === 'connected'
-                          ? 'i-lucide-check-circle'
-                          : backendStatus === 'disconnected'
-                          ? 'i-lucide-x-circle'
-                          : backendStatus === 'checking'
-                          ? 'i-lucide-loader-2'
-                          : 'i-lucide-circle'
-                      "
-                      :class="{ 'animate-spin': backendStatus === 'checking' }"
-                    />
-                  </template>
-                  <span class="group-hover:hidden">{{
-                    backendStatusMessage
-                  }}</span>
-                  <code
-                    class="hidden group-hover:inline text-sm px-2 py-1 rounded"
-                    >{{ useConfigStore().backendURL }}</code
-                  >
-                </UBadge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

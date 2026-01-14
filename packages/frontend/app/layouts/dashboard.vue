@@ -1,5 +1,4 @@
 <template>
-  <!-- todo -->
   <UDashboardGroup>
     <UDashboardSidebar
       collapsible
@@ -7,112 +6,129 @@
       :ui="{ footer: 'border-t border-default' }"
     >
       <template #header="{ collapsed }">
-        <Logo v-if="!collapsed" class="h-5 w-auto shrink-0" />
         <UIcon
-          v-else
+          v-if="collapsed"
           name="i-simple-icons-nuxtdotjs"
           class="size-5 text-primary mx-auto"
         />
+        <div v-else>
+          <h1 class="font-bold text-gray-900 dark:text-white">
+            Elysia 应用管理
+          </h1>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            管理和部署你的 Elysia 应用
+          </p>
+        </div>
       </template>
 
       <template #default="{ collapsed }">
-        <UButton
-          :label="collapsed ? undefined : 'Search...'"
-          icon="i-lucide-search"
-          color="neutral"
-          variant="outline"
-          block
-          :square="collapsed"
-        >
-          <template v-if="!collapsed" #trailing>
-            <div class="flex items-center gap-0.5 ms-auto">
-              <UKbd value="meta" variant="subtle" />
-              <UKbd value="K" variant="subtle" />
-            </div>
-          </template>
-        </UButton>
-
         <UNavigationMenu
           :collapsed="collapsed"
-          :items="items[0]"
+          :items="items"
+          class="group flex flex-col gap-2"
           orientation="vertical"
-        />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="items[1]"
-          orientation="vertical"
-          class="mt-auto"
         />
       </template>
 
-      <template #footer="{ collapsed }">
-        <UButton
-          :avatar="{
-            src: 'https://github.com/benjamincanac.png',
-          }"
-          :label="collapsed ? undefined : 'Benjamin'"
-          color="neutral"
-          variant="ghost"
-          class="w-full"
-          :block="collapsed"
+      <template
+        #footer="{ collapsed }"
+        class="flex items-center justify-center gap-2 group"
+      >
+        <UIcon
+          v-if="collapsed"
+          :name="
+            backendStatus === 'connected'
+              ? 'i-lucide-check-circle'
+              : backendStatus === 'disconnected'
+              ? 'i-lucide-x-circle'
+              : backendStatus === 'checking'
+              ? 'i-lucide-loader-2'
+              : 'i-lucide-circle'
+          "
+          :class="{ 'animate-spin': backendStatus === 'checking' }"
         />
+
+        <UBadge
+          v-else
+          :color="
+            backendStatus === 'connected'
+              ? 'success'
+              : backendStatus === 'disconnected'
+              ? 'error'
+              : backendStatus === 'checking'
+              ? 'warning'
+              : 'neutral'
+          "
+          variant="subtle"
+          class="relative group"
+        >
+          <template #icon>
+            <UIcon
+              :name="
+                backendStatus === 'connected'
+                  ? 'i-lucide-check-circle'
+                  : backendStatus === 'disconnected'
+                  ? 'i-lucide-x-circle'
+                  : backendStatus === 'checking'
+                  ? 'i-lucide-loader-2'
+                  : 'i-lucide-circle'
+              "
+              :class="{ 'animate-spin': backendStatus === 'checking' }"
+            />
+          </template>
+          <span class="group-hover:hidden">{{ backendStatusMessage }}</span>
+          <code class="hidden group-hover:inline rounded">{{
+            useConfigStore().backendURL
+          }}</code>
+        </UBadge>
       </template>
     </UDashboardSidebar>
 
-    <slot />
+    <div class="flex-1">
+      <slot />
+    </div>
   </UDashboardGroup>
 </template>
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+const { $elysia } = useNuxtApp();
 
-const items: NavigationMenuItem[][] = [
-  [
-    {
-      label: "Home",
-      icon: "i-lucide-house",
-      active: true,
-    },
-    {
-      label: "Inbox",
-      icon: "i-lucide-inbox",
-      badge: "4",
-    },
-    {
-      label: "Contacts",
-      icon: "i-lucide-users",
-    },
-    {
-      label: "Settings",
-      icon: "i-lucide-settings",
-      defaultOpen: true,
-      children: [
-        {
-          label: "General",
-        },
-        {
-          label: "Members",
-        },
-        {
-          label: "Notifications",
-        },
-      ],
-    },
-  ],
-  [
-    {
-      label: "Feedback",
-      icon: "i-lucide-message-circle",
-      to: "https://github.com/nuxt-ui-templates/dashboard",
-      target: "_blank",
-    },
-    {
-      label: "Help & Support",
-      icon: "i-lucide-info",
-      to: "https://github.com/nuxt/ui",
-      target: "_blank",
-    },
-  ],
+// 后端连接状态
+const backendStatus = ref<"checking" | "connected" | "disconnected">(
+  "checking"
+);
+
+const backendStatusMessage = ref("正在检查后端连接...");
+
+// 检查后端连接状态
+async function checkBackendStatus() {
+  try {
+    await $elysia.api.health.get();
+    backendStatus.value = "connected";
+    backendStatusMessage.value = "后端连接正常";
+  } catch (error) {
+    backendStatus.value = "disconnected";
+    backendStatusMessage.value = "后端连接失败";
+  }
+}
+
+// 初始化
+onMounted(async () => {
+  // 检查后端连接状态
+  await checkBackendStatus();
+});
+
+const items: NavigationMenuItem[] = [
+  {
+    label: "应用列表",
+    href: "/",
+    icon: "i-lucide-list",
+  },
+  {
+    label: "储存管理",
+    href: "/store",
+    icon: "i-lucide-database",
+  },
 ];
 </script>
