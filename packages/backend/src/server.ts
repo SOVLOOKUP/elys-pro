@@ -338,7 +338,7 @@ const startServer = async () => {
           ? request.url
           : request.url.replace("http", "https");
 
-        target.searchParams.set("backendURL", atob(backendURL));
+        target.searchParams.set("backendURL", encodeURIComponent(backendURL));
 
         // 跳转到前端地址
         return Response.redirect(target.href, 302);
