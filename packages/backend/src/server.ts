@@ -56,11 +56,11 @@ const mainApp = new Elysia()
           // 删除应用
           .delete(
             "/:name",
-            async ({ params, query }) => {
+            async ({ params, body }) => {
               const res = await prisma.app.deleteMany({
                 where: {
                   name: params.name,
-                  version: query.version === "all" ? undefined : query.version,
+                  version: body.version === "all" ? undefined : body.version,
                 },
               });
 
@@ -71,7 +71,7 @@ const mainApp = new Elysia()
               return res;
             },
             {
-              query: t.Object({
+              body: t.Object({
                 // 指定版本号或 all
                 version: t.Union([t.String(), t.Literal("all")]),
               }),
@@ -80,9 +80,9 @@ const mainApp = new Elysia()
           // 创建应用
           .post(
             "/:name",
-            async ({ params, body, query }) => {
+            async ({ params, body }) => {
               const name = params.name;
-              const version = query.version;
+              const version = body.version;
               const path = decodeURIComponent(body.path);
 
               const store = await prisma.store.findUnique({
@@ -162,11 +162,9 @@ const mainApp = new Elysia()
             },
             {
               body: t.Object({
+                version: t.String(),
                 path: t.String(),
                 storeId: t.String(),
-              }),
-              query: t.Object({
-                version: t.String(),
               }),
             }
           )
@@ -199,7 +197,7 @@ const mainApp = new Elysia()
             },
             {
               body: t.Object({
-                schema: t.Union(schemas.map((i) => t.Literal(i))),
+                schema: t.Enum(Object.fromEntries(schemas.map((i) => [i, i]))),
                 config: t.Record(t.String(), t.String()),
               }),
             }
@@ -214,9 +212,7 @@ const mainApp = new Elysia()
               });
             },
             {
-              query: t.Object({
-                name: t.String(),
-              }),
+              body: t.Object({}),
             }
           )
       )

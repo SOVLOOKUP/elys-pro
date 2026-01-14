@@ -8,10 +8,8 @@ import {
   schemas,
 } from "backend/src/loader/protocal/opendal/generated/schema";
 import schemaConfig from "backend/src/loader/protocal/opendal/generated/schemaConfig";
-import { newURL } from "backend/src/loader/protocal/opendal/utils";
 import { startCase, pascalCase } from "es-toolkit";
 
-const clipboard = useClipboard();
 const { $elysia } = useNuxtApp();
 const toast = useToast();
 const defaultSchema: OpendalSchema = "http";
@@ -103,20 +101,12 @@ const schema = computed(() => {
   return targetSchema;
 });
 
-const uploadURL = computed(() => {
-  return newURL(
-    uploadForm.value.protocol,
-    uploadForm.value.config,
-    uploadForm.value.path
-  );
-});
-
 // 加载应用列表
 async function loadApps() {
   loading.value = true;
   lastRequestStatus.value = "loading";
   try {
-    const { data } = await $elysia.api.apps.get();
+    const { data } = await $elysia.api.app.get();
     apps.value = data || [];
     lastRequestStatus.value = "success";
   } catch (error) {
@@ -191,14 +181,11 @@ async function uploadApp() {
   loading.value = true;
   try {
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
-    await $elysia.api.app({ name: uploadForm.value.name }).post(
-      { url: uploadURL.value },
-      {
-        query: {
-          version: uploadForm.value.version,
-        },
-      }
-    );
+    await $elysia.api.app({ name: uploadForm.value.name }).post({
+      storeId: "todo",
+      path: uploadForm.value.path,
+      version: uploadForm.value.version,
+    });
 
     toast.add({
       title: "上传成功",
@@ -242,13 +229,9 @@ async function deleteApp() {
   loading.value = true;
   try {
     // 使用类型断言避免类型错误，实际API结构可能需要后端定义
-    await $elysia.api
-      .app({ name: appToDeleteValue.name })
-      .delete(undefined as any, {
-        query: {
-          version: appToDeleteValue.version,
-        },
-      });
+    await $elysia.api.app({ name: appToDeleteValue.name }).delete({
+      version: appToDeleteValue.version,
+    });
 
     toast.add({
       title: "删除成功",
@@ -341,6 +324,7 @@ onMounted(async () => {
 
                         <UFormField label="应用来源" required>
                           <UFieldGroup class="w-full">
+                            <!-- todo 选择 store -->
                             <USelect
                               width="full"
                               v-model="uploadForm.protocol"
@@ -377,57 +361,7 @@ onMounted(async () => {
                             />
                           </UFieldGroup>
                         </UFormField>
-
-                        <!-- 动态使用表单组件 -->
-                        <UFormField label="协议配置">
-                          <div class="w-full rounded-lg">
-                            <p class="text-xs text-gray-500 mb-2">
-                              填写协议配置参数
-                            </p>
-                            <UCard>
-                              <MAutoForm
-                                class="space-y-2"
-                                :submitButton="false"
-                                :state="uploadForm.config"
-                                :schema="schema"
-                              />
-                            </UCard>
-                          </div>
-                        </UFormField>
                       </UForm>
-
-                      <!-- 链接预览 -->
-                      <div
-                        class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 relative"
-                      >
-                        <p class="text-xs text-gray-500 mb-1">资源 URL 预览</p>
-                        <div class="flex items-center gap-2">
-                          <UIcon
-                            name="i-lucide-link-2"
-                            class="text-gray-400 flex-shrink-0"
-                          />
-                          <code
-                            class="text-sm text-gray-700 dark:text-gray-300 break-all font-mono"
-                            >{{ uploadURL }}</code
-                          >
-                        </div>
-                        <!-- 复制按钮放在右上角 -->
-                        <UButton
-                          color="neutral"
-                          variant="ghost"
-                          size="xs"
-                          square
-                          icon="i-lucide-copy"
-                          class="absolute top-2 right-2"
-                          @click="
-                            clipboard.copy(uploadURL);
-                            toast.add({
-                              title: '已复制到剪贴板',
-                              color: 'success',
-                            });
-                          "
-                        />
-                      </div>
 
                       <template #footer>
                         <div class="flex justify-end gap-2">

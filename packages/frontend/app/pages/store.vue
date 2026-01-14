@@ -36,7 +36,7 @@ import {
 } from "backend/src/loader/protocal/opendal/generated/schema";
 import { startCase } from "es-toolkit";
 
-const defaultSchema: OpendalSchema = "http";
+const { $elysia } = useNuxtApp();
 
 definePageMeta({
   layout: "dashboard",
@@ -107,8 +107,18 @@ function getProtocolIcon(protocol: OpendalSchema): string {
 const uploadForm = ref({
   name: "",
   version: "",
-  protocol: defaultSchema as OpendalSchema,
+  protocol: "http" as OpendalSchema,
   config: {},
   path: "",
+});
+
+// 列出所有store
+$elysia.api.store.get();
+// 删除一个store
+$elysia.api.store({ store: "name" }).delete({});
+// 创建一个store
+$elysia.api.store({ store: "name" }).post({
+  schema: uploadForm.value.protocol,
+  config: uploadForm.value.config,
 });
 </script>
