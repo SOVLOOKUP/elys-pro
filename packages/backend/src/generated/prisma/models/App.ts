@@ -28,27 +28,30 @@ export type AppMinAggregateOutputType = {
   id: string | null
   name: string | null
   version: string | null
-  url: string | null
+  path: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  storeId: string | null
 }
 
 export type AppMaxAggregateOutputType = {
   id: string | null
   name: string | null
   version: string | null
-  url: string | null
+  path: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  storeId: string | null
 }
 
 export type AppCountAggregateOutputType = {
   id: number
   name: number
   version: number
-  url: number
+  path: number
   createdAt: number
   updatedAt: number
+  storeId: number
   _all: number
 }
 
@@ -57,27 +60,30 @@ export type AppMinAggregateInputType = {
   id?: true
   name?: true
   version?: true
-  url?: true
+  path?: true
   createdAt?: true
   updatedAt?: true
+  storeId?: true
 }
 
 export type AppMaxAggregateInputType = {
   id?: true
   name?: true
   version?: true
-  url?: true
+  path?: true
   createdAt?: true
   updatedAt?: true
+  storeId?: true
 }
 
 export type AppCountAggregateInputType = {
   id?: true
   name?: true
   version?: true
-  url?: true
+  path?: true
   createdAt?: true
   updatedAt?: true
+  storeId?: true
   _all?: true
 }
 
@@ -157,9 +163,10 @@ export type AppGroupByOutputType = {
   id: string
   name: string
   version: string
-  url: string
+  path: string
   createdAt: Date
   updatedAt: Date
+  storeId: string
   _count: AppCountAggregateOutputType | null
   _min: AppMinAggregateOutputType | null
   _max: AppMaxAggregateOutputType | null
@@ -187,18 +194,22 @@ export type AppWhereInput = {
   id?: Prisma.StringFilter<"App"> | string
   name?: Prisma.StringFilter<"App"> | string
   version?: Prisma.StringFilter<"App"> | string
-  url?: Prisma.StringFilter<"App"> | string
+  path?: Prisma.StringFilter<"App"> | string
   createdAt?: Prisma.DateTimeFilter<"App"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"App"> | Date | string
+  storeId?: Prisma.StringFilter<"App"> | string
+  store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
 }
 
 export type AppOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   version?: Prisma.SortOrder
-  url?: Prisma.SortOrder
+  path?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  storeId?: Prisma.SortOrder
+  store?: Prisma.StoreOrderByWithRelationInput
 }
 
 export type AppWhereUniqueInput = Prisma.AtLeast<{
@@ -209,18 +220,21 @@ export type AppWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AppWhereInput[]
   NOT?: Prisma.AppWhereInput | Prisma.AppWhereInput[]
   version?: Prisma.StringFilter<"App"> | string
-  url?: Prisma.StringFilter<"App"> | string
+  path?: Prisma.StringFilter<"App"> | string
   createdAt?: Prisma.DateTimeFilter<"App"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"App"> | Date | string
+  storeId?: Prisma.StringFilter<"App"> | string
+  store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
 }, "id" | "name" | "name_version">
 
 export type AppOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   version?: Prisma.SortOrder
-  url?: Prisma.SortOrder
+  path?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  storeId?: Prisma.SortOrder
   _count?: Prisma.AppCountOrderByAggregateInput
   _max?: Prisma.AppMaxOrderByAggregateInput
   _min?: Prisma.AppMinOrderByAggregateInput
@@ -233,61 +247,67 @@ export type AppScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"App"> | string
   name?: Prisma.StringWithAggregatesFilter<"App"> | string
   version?: Prisma.StringWithAggregatesFilter<"App"> | string
-  url?: Prisma.StringWithAggregatesFilter<"App"> | string
+  path?: Prisma.StringWithAggregatesFilter<"App"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"App"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"App"> | Date | string
+  storeId?: Prisma.StringWithAggregatesFilter<"App"> | string
 }
 
 export type AppCreateInput = {
   id?: string
   name: string
   version: string
-  url: string
+  path: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutAppsInput
 }
 
 export type AppUncheckedCreateInput = {
   id?: string
   name: string
   version: string
-  url: string
+  path: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  storeId: string
 }
 
 export type AppUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutAppsNestedInput
 }
 
 export type AppUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AppCreateManyInput = {
   id?: string
   name: string
   version: string
-  url: string
+  path: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  storeId: string
 }
 
 export type AppUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -296,9 +316,10 @@ export type AppUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AppNameVersionCompoundUniqueInput = {
@@ -310,27 +331,40 @@ export type AppCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   version?: Prisma.SortOrder
-  url?: Prisma.SortOrder
+  path?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  storeId?: Prisma.SortOrder
 }
 
 export type AppMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   version?: Prisma.SortOrder
-  url?: Prisma.SortOrder
+  path?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  storeId?: Prisma.SortOrder
 }
 
 export type AppMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   version?: Prisma.SortOrder
-  url?: Prisma.SortOrder
+  path?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  storeId?: Prisma.SortOrder
+}
+
+export type AppListRelationFilter = {
+  every?: Prisma.AppWhereInput
+  some?: Prisma.AppWhereInput
+  none?: Prisma.AppWhereInput
+}
+
+export type AppOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -341,56 +375,209 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type AppCreateNestedManyWithoutStoreInput = {
+  create?: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput> | Prisma.AppCreateWithoutStoreInput[] | Prisma.AppUncheckedCreateWithoutStoreInput[]
+  connectOrCreate?: Prisma.AppCreateOrConnectWithoutStoreInput | Prisma.AppCreateOrConnectWithoutStoreInput[]
+  createMany?: Prisma.AppCreateManyStoreInputEnvelope
+  connect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+}
+
+export type AppUncheckedCreateNestedManyWithoutStoreInput = {
+  create?: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput> | Prisma.AppCreateWithoutStoreInput[] | Prisma.AppUncheckedCreateWithoutStoreInput[]
+  connectOrCreate?: Prisma.AppCreateOrConnectWithoutStoreInput | Prisma.AppCreateOrConnectWithoutStoreInput[]
+  createMany?: Prisma.AppCreateManyStoreInputEnvelope
+  connect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+}
+
+export type AppUpdateManyWithoutStoreNestedInput = {
+  create?: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput> | Prisma.AppCreateWithoutStoreInput[] | Prisma.AppUncheckedCreateWithoutStoreInput[]
+  connectOrCreate?: Prisma.AppCreateOrConnectWithoutStoreInput | Prisma.AppCreateOrConnectWithoutStoreInput[]
+  upsert?: Prisma.AppUpsertWithWhereUniqueWithoutStoreInput | Prisma.AppUpsertWithWhereUniqueWithoutStoreInput[]
+  createMany?: Prisma.AppCreateManyStoreInputEnvelope
+  set?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  disconnect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  delete?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  connect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  update?: Prisma.AppUpdateWithWhereUniqueWithoutStoreInput | Prisma.AppUpdateWithWhereUniqueWithoutStoreInput[]
+  updateMany?: Prisma.AppUpdateManyWithWhereWithoutStoreInput | Prisma.AppUpdateManyWithWhereWithoutStoreInput[]
+  deleteMany?: Prisma.AppScalarWhereInput | Prisma.AppScalarWhereInput[]
+}
+
+export type AppUncheckedUpdateManyWithoutStoreNestedInput = {
+  create?: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput> | Prisma.AppCreateWithoutStoreInput[] | Prisma.AppUncheckedCreateWithoutStoreInput[]
+  connectOrCreate?: Prisma.AppCreateOrConnectWithoutStoreInput | Prisma.AppCreateOrConnectWithoutStoreInput[]
+  upsert?: Prisma.AppUpsertWithWhereUniqueWithoutStoreInput | Prisma.AppUpsertWithWhereUniqueWithoutStoreInput[]
+  createMany?: Prisma.AppCreateManyStoreInputEnvelope
+  set?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  disconnect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  delete?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  connect?: Prisma.AppWhereUniqueInput | Prisma.AppWhereUniqueInput[]
+  update?: Prisma.AppUpdateWithWhereUniqueWithoutStoreInput | Prisma.AppUpdateWithWhereUniqueWithoutStoreInput[]
+  updateMany?: Prisma.AppUpdateManyWithWhereWithoutStoreInput | Prisma.AppUpdateManyWithWhereWithoutStoreInput[]
+  deleteMany?: Prisma.AppScalarWhereInput | Prisma.AppScalarWhereInput[]
+}
+
+export type AppCreateWithoutStoreInput = {
+  id?: string
+  name: string
+  version: string
+  path: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type AppUncheckedCreateWithoutStoreInput = {
+  id?: string
+  name: string
+  version: string
+  path: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type AppCreateOrConnectWithoutStoreInput = {
+  where: Prisma.AppWhereUniqueInput
+  create: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput>
+}
+
+export type AppCreateManyStoreInputEnvelope = {
+  data: Prisma.AppCreateManyStoreInput | Prisma.AppCreateManyStoreInput[]
+}
+
+export type AppUpsertWithWhereUniqueWithoutStoreInput = {
+  where: Prisma.AppWhereUniqueInput
+  update: Prisma.XOR<Prisma.AppUpdateWithoutStoreInput, Prisma.AppUncheckedUpdateWithoutStoreInput>
+  create: Prisma.XOR<Prisma.AppCreateWithoutStoreInput, Prisma.AppUncheckedCreateWithoutStoreInput>
+}
+
+export type AppUpdateWithWhereUniqueWithoutStoreInput = {
+  where: Prisma.AppWhereUniqueInput
+  data: Prisma.XOR<Prisma.AppUpdateWithoutStoreInput, Prisma.AppUncheckedUpdateWithoutStoreInput>
+}
+
+export type AppUpdateManyWithWhereWithoutStoreInput = {
+  where: Prisma.AppScalarWhereInput
+  data: Prisma.XOR<Prisma.AppUpdateManyMutationInput, Prisma.AppUncheckedUpdateManyWithoutStoreInput>
+}
+
+export type AppScalarWhereInput = {
+  AND?: Prisma.AppScalarWhereInput | Prisma.AppScalarWhereInput[]
+  OR?: Prisma.AppScalarWhereInput[]
+  NOT?: Prisma.AppScalarWhereInput | Prisma.AppScalarWhereInput[]
+  id?: Prisma.StringFilter<"App"> | string
+  name?: Prisma.StringFilter<"App"> | string
+  version?: Prisma.StringFilter<"App"> | string
+  path?: Prisma.StringFilter<"App"> | string
+  createdAt?: Prisma.DateTimeFilter<"App"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"App"> | Date | string
+  storeId?: Prisma.StringFilter<"App"> | string
+}
+
+export type AppCreateManyStoreInput = {
+  id?: string
+  name: string
+  version: string
+  path: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type AppUpdateWithoutStoreInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  version?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AppUncheckedUpdateWithoutStoreInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  version?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AppUncheckedUpdateManyWithoutStoreInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  version?: Prisma.StringFieldUpdateOperationsInput | string
+  path?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 
 export type AppSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   version?: boolean
-  url?: boolean
+  path?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  storeId?: boolean
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["app"]>
 
 export type AppSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   version?: boolean
-  url?: boolean
+  path?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  storeId?: boolean
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["app"]>
 
 export type AppSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   version?: boolean
-  url?: boolean
+  path?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  storeId?: boolean
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["app"]>
 
 export type AppSelectScalar = {
   id?: boolean
   name?: boolean
   version?: boolean
-  url?: boolean
+  path?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  storeId?: boolean
 }
 
-export type AppOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "version" | "url" | "createdAt" | "updatedAt", ExtArgs["result"]["app"]>
+export type AppOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "version" | "path" | "createdAt" | "updatedAt" | "storeId", ExtArgs["result"]["app"]>
+export type AppInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
+}
+export type AppIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
+}
+export type AppIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
+}
 
 export type $AppPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "App"
-  objects: {}
+  objects: {
+    store: Prisma.$StorePayload<ExtArgs>
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
     version: string
-    url: string
+    path: string
     createdAt: Date
     updatedAt: Date
+    storeId: string
   }, ExtArgs["result"]["app"]>
   composites: {}
 }
@@ -785,6 +972,7 @@ readonly fields: AppFieldRefs;
  */
 export interface Prisma__AppClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  store<T extends Prisma.StoreDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StoreDefaultArgs<ExtArgs>>): Prisma.Prisma__StoreClient<runtime.Types.Result.GetResult<Prisma.$StorePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -817,9 +1005,10 @@ export interface AppFieldRefs {
   readonly id: Prisma.FieldRef<"App", 'String'>
   readonly name: Prisma.FieldRef<"App", 'String'>
   readonly version: Prisma.FieldRef<"App", 'String'>
-  readonly url: Prisma.FieldRef<"App", 'String'>
+  readonly path: Prisma.FieldRef<"App", 'String'>
   readonly createdAt: Prisma.FieldRef<"App", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"App", 'DateTime'>
+  readonly storeId: Prisma.FieldRef<"App", 'String'>
 }
     
 
@@ -836,6 +1025,10 @@ export type AppFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
   /**
    * Filter, which App to fetch.
    */
@@ -855,6 +1048,10 @@ export type AppFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensions.In
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
+  /**
    * Filter, which App to fetch.
    */
   where: Prisma.AppWhereUniqueInput
@@ -872,6 +1069,10 @@ export type AppFindFirstArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
   /**
    * Filter, which App to fetch.
    */
@@ -921,6 +1122,10 @@ export type AppFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.Int
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
+  /**
    * Filter, which App to fetch.
    */
   where?: Prisma.AppWhereInput
@@ -969,6 +1174,10 @@ export type AppFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
+  /**
    * Filter, which Apps to fetch.
    */
   where?: Prisma.AppWhereInput
@@ -1012,6 +1221,10 @@ export type AppCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs 
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
+  /**
    * The data needed to create a App.
    */
   data: Prisma.XOR<Prisma.AppCreateInput, Prisma.AppUncheckedCreateInput>
@@ -1043,6 +1256,10 @@ export type AppCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions.
    * The data used to create many Apps.
    */
   data: Prisma.AppCreateManyInput | Prisma.AppCreateManyInput[]
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1057,6 +1274,10 @@ export type AppUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs 
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
   /**
    * The data needed to update a App.
    */
@@ -1109,6 +1330,10 @@ export type AppUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions.
    * Limit how many Apps to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1123,6 +1348,10 @@ export type AppUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs 
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
   /**
    * The filter to search for the App to update in case it exists.
    */
@@ -1149,6 +1378,10 @@ export type AppDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs 
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
   /**
    * Filter which App to delete.
    */
@@ -1181,4 +1414,8 @@ export type AppDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
    * Omit specific fields from the App
    */
   omit?: Prisma.AppOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AppInclude<ExtArgs> | null
 }

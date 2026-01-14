@@ -22,3 +22,8 @@ export * from './enums.ts';
  * 
  */
 export type App = Prisma.AppModel
+/**
+ * Model Store
+ * 
+ */
+export type Store = Prisma.StoreModel

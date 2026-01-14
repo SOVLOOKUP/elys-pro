@@ -16,12 +16,28 @@ datasource db {
 }
 
 model App {
-  id        String   @id @default(ulid())
-  name      String   @unique
-  version   String
-  url       String
+  id      String @id @default(ulid())
+  name    String @unique
+  version String
+
+  path      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
   @@unique([name, version])
+}
+
+model Store {
+  id   String @id @default(ulid())
+  name String @unique
+
+  schema String
+  config Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  apps      App[]
 }
