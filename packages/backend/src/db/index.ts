@@ -19,7 +19,7 @@ export const migrateDeploy = async () => {
   console.log(text);
 };
 
-const databaseUrl = getDataBaseURL(appDir);
+const databaseUrl = await getDataBaseURL(appDir);
 
 // Determine the database adapter based on the DATABASE_URL environment variable
 const adapter: SqlDriverAdapterFactory = databaseUrl?.startsWith("postgres")

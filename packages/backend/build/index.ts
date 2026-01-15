@@ -44,7 +44,6 @@ await Promise.all([
     ],
     target: "bun",
     outdir: "dist",
-    bytecode: true,
     minify: inAction,
     sourcemap: "linked",
     plugins: [fixOpendalPlugin, fixPrismaWasmPlugin],
