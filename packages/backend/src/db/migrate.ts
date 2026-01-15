@@ -1,6 +1,5 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url ?? __filename);
-const { MigrateDeploy } = require("@prisma/migrate");
+// @ts-ignore
+import { MigrateDeploy } from "@prisma/migrate";
 import { type PrismaConfig } from "prisma/config";
 import { resolve } from "path";
 import { getDataBaseURL } from "./utils";

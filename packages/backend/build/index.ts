@@ -8,6 +8,7 @@ import {
   type DownloadOptions,
 } from "@prisma/fetch-engine";
 import { prismaVersion } from "@/generated/prisma/internal/prismaNamespace";
+import { prependTextToFile } from "./utils";
 
 const inAction = process.env.GITHUB_ACTIONS === "true";
 
@@ -47,7 +48,16 @@ await Promise.all([
     minify: inAction,
     sourcemap: "linked",
     plugins: [fixOpendalPlugin, fixPrismaWasmPlugin],
-  }),
+  }).then(() =>
+    // fix @prisma/migrate
+    prependTextToFile(
+      "dist/src/db/migrate.js",
+      `import { fileURLToPath } from "url";
+import { dirname } from "path";
+global.__filename = fileURLToPath(import.meta.url);
+global.__dirname = dirname(fileURLToPath(import.meta.url));`
+    )
+  ),
   copy("prisma", "dist/prisma"),
 ]);
 
