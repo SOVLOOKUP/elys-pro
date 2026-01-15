@@ -1,5 +1,4 @@
 import { Elysia, NotFoundError, status, t } from "elysia";
-import { join } from "path";
 import { maxSatisfying } from "semver";
 import cors from "@elysiajs/cors";
 import { prisma } from "./db";
@@ -8,8 +7,7 @@ import {
   schemas,
   type OpendalSchema,
 } from "./loader/protocal/opendal/generated/schema";
-import { AppInputCreate, AppWhereUnique } from "./generated/prismabox/App";
-import { encodeOptions, newURL } from "./loader/protocal/opendal/utils";
+import { newURL } from "./loader/protocal/opendal/utils";
 import { Operator } from "opendal";
 
 // 生产前端地址
@@ -106,9 +104,7 @@ const mainApp = new Elysia()
                 success: boolean;
                 error?: string;
               }>((resolve) => {
-                const validator = new Worker(
-                  join(import.meta.dir, "./workers/worker-validator.ts")
-                );
+                const validator = new Worker("./workers/worker-validator.ts");
 
                 const timeout = setTimeout(() => {
                   validator.terminate();
