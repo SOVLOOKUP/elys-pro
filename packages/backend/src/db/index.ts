@@ -7,14 +7,13 @@ import { getDataBaseURL } from "./utils";
 
 const mainPath = dirname(Bun.main);
 const appDir = resolve(mainPath, "..");
+const dbDir = resolve(mainPath, "./db/");
+const dbScript = resolve(dbDir, "./migrate");
 
 export const migrateDeploy = async () => {
-  const proc = Bun.spawn([
-    "bun",
-    "run",
-    resolve(mainPath, "./db/migrate"),
-    appDir,
-  ]);
+  const proc = Bun.spawn(["bun", "run", dbScript, appDir], {
+    cwd: dbDir,
+  });
   const text = await proc.stdout.text();
   console.log(text);
 };
