@@ -416,7 +416,7 @@
 import {
   type OpendalSchema,
   schemas,
-} from "backend/src/loader/protocal/opendal/generated/schema";
+} from "backend/src/loader/protocal/generated/schema";
 import { startCase } from "es-toolkit";
 
 const { $elysia } = useNuxtApp();

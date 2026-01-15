@@ -6,8 +6,8 @@ import type { AppModel } from "backend/src/generated/prisma/internal/prismaNames
 import {
   type OpendalSchema,
   schemas,
-} from "backend/src/loader/protocal/opendal/generated/schema";
-import schemaConfig from "backend/src/loader/protocal/opendal/generated/schemaConfig";
+} from "backend/src/loader/protocal/generated/schema";
+import schemaConfig from "backend/src/loader/protocal/generated/schemaConfig";
 import { startCase, pascalCase } from "es-toolkit";
 
 const { $elysia } = useNuxtApp();

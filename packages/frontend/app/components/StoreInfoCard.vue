@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { type OpendalSchema } from "backend/src/loader/protocal/opendal/generated/schema";
+import { type OpendalSchema } from "backend/src/loader/protocal/generated/schema";
 
 interface Store {
   name: string;

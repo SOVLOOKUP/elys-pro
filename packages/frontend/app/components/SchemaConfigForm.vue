@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { type OpendalSchema } from "backend/src/loader/protocal/opendal/generated/schema";
-import schemaConfig from "backend/src/loader/protocal/opendal/generated/schemaConfig";
+import { type OpendalSchema } from "backend/src/loader/protocal/generated/schema";
+import schemaConfig from "backend/src/loader/protocal/generated/schemaConfig";
 
 // 上传表单
 const uploadForm = defineModel<{
