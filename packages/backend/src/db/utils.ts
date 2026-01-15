@@ -1,7 +1,7 @@
 import { dirname, resolve } from "path";
 import { ensureDir } from "fs-extra";
 
-const rootDir = resolve(dirname(process.argv[1]!), "..");
+const rootDir = resolve(dirname(Bun.main), "..");
 
 let databaseUrl: string;
 

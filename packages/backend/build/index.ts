@@ -37,7 +37,11 @@ if (inAction) {
 await Promise.all([
   Bun.build({
     splitting: true,
-    entrypoints: ["./src/main.ts", ...(await api.withPromise())],
+    entrypoints: [
+      "./src/main.ts",
+      "./src/db/migrate.ts",
+      ...(await api.withPromise()),
+    ],
     target: "bun",
     outdir: "dist",
     minify: inAction,
