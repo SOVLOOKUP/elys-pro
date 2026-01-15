@@ -2,7 +2,7 @@ import { TOML } from "bun";
 import ky from "ky";
 import { camelCase, pascalCase } from "es-toolkit";
 import { parseDocument } from "htmlparser2";
-import { selectOne } from "css-select";
+import { selectOne, selectAll } from "css-select";
 import { generate } from "ts-to-zod";
 
 // 配置并发请求数量
@@ -215,4 +215,22 @@ export default {
 }
 
 // 执行主函数
-await main();
+await Promise.all([
+  main(),
+  (async () => {
+    const bunLoaders: string[] = selectAll(
+      `#table-of-contents-content > li[data-depth="1"]`,
+      parseDocument(await ky.get("https://bun.com/docs/bundler/loaders").text())
+    ).map((i) => extractNodeText(i));
+
+    await Bun.write(
+      `${generatedPath}bunLoaders.ts`,
+      `// generate from https://bun.com/docs/bundler/loaders
+// @ts-ignore
+export const loader = new Set<Bun.Loader>([
+  "${bunLoaders.join('",\n  "')}"
+])`
+    );
+    console.log("已生成 bunLoaders.ts");
+  })(),
+]);

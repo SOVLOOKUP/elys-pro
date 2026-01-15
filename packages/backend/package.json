@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "build": "bun run build/index.ts",
-    "opendal": "bun run opendalSchema.ts",
+    "gen": "bun run genCode.ts",
     "prisma:studio": "bunx --bun prisma studio",
     "prisma:migrate": "bunx --bun prisma migrate dev --name",
     "prisma:generate": "bunx --bun prisma generate"

@@ -4,26 +4,9 @@ import { Operator } from "opendal";
 import { extname } from "path";
 
 import { schemas } from "./generated/schema";
+import type { Loader } from "bun";
 import { decodeOptions } from "./utils";
-
-/** https://bun.com/docs/bundler/loaders */
-type Loader = Parameters<Bun.OnLoadCallback>["0"]["loader"];
-const loader = new Set<Loader>([
-  "js",
-  "jsx",
-  "ts",
-  "tsx",
-  "json",
-  "jsonc",
-  "toml",
-  "yaml",
-  "file",
-  "napi",
-  "wasm",
-  "text",
-  "css",
-  "html",
-]);
+import { loader } from "./generated/bunLoaders";
 
 type Contents =
   | string
