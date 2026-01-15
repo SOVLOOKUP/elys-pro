@@ -2,7 +2,14 @@
 import { MigrateDeploy } from "@prisma/migrate";
 import { type PrismaConfig } from "prisma/config";
 import { resolve } from "path";
-import { databaseUrl, rootDir } from "./utils";
+import { getDataBaseURL } from "./utils";
+
+const rootDir = process.argv[2];
+
+if (!rootDir) {
+  console.error("Please provide the root directory as an argument.");
+  process.exit(1);
+}
 
 const migrateDeploy = async (
   baseDir: string,
@@ -17,6 +24,6 @@ await migrateDeploy(rootDir, {
     path: resolve(rootDir, "prisma/migrations"),
   },
   datasource: {
-    url: databaseUrl,
+    url: await getDataBaseURL(rootDir),
   },
 });
