@@ -17,13 +17,15 @@ const migrateDeploy = async (
 ): Promise<void> =>
   await MigrateDeploy.new().parse(["migrate", "deploy"], config, baseDir);
 
-// 自动 migrate 数据库
-await migrateDeploy(rootDir, {
-  schema: resolve(rootDir, "prisma/schema.prisma"),
-  migrations: {
-    path: resolve(rootDir, "prisma/migrations"),
-  },
-  datasource: {
-    url: await getDataBaseURL(rootDir),
-  },
-});
+(async () => {
+  // 自动 migrate 数据库
+  await migrateDeploy(rootDir, {
+    schema: resolve(rootDir, "prisma/schema.prisma"),
+    migrations: {
+      path: resolve(rootDir, "prisma/migrations"),
+    },
+    datasource: {
+      url: await getDataBaseURL(rootDir),
+    },
+  });
+})();
