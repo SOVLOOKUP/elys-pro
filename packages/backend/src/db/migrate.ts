@@ -25,7 +25,7 @@ const migrateDeploy = async (
       path: resolve(rootDir, "prisma/migrations"),
     },
     datasource: {
-      url: await getDataBaseURL(rootDir),
+      url: getDataBaseURL(rootDir),
     },
   });
 })();
