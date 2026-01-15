@@ -1,15 +1,17 @@
 import type { BunPlugin } from "bun";
-import { protocols } from "./protocal";
+import { ProtocolLoader } from "./protocal";
 import { getCacheIfExistNorSet } from "./cache";
 
-export const more_imports: BunPlugin = {
+const protocolLoader = new ProtocolLoader();
+
+export const moreImports: BunPlugin = {
   name: "more_imports",
   setup(build) {
     // 相对导入转换为绝对导入
     build.onResolve({ filter: /^(?:\/|\.\.?\/)/ }, ({ path, importer }) => {
       try {
         const { protocol } = new URL(importer);
-        return protocols.has(protocol)
+        return protocolLoader.protocols.has(protocol)
           ? { path: new URL(path, importer).href }
           : undefined;
       } catch (error) {
@@ -19,7 +21,7 @@ export const more_imports: BunPlugin = {
     });
 
     // 使用自定义方法解析指定协议导入
-    for (const [protocol, callback] of protocols) {
+    for (const [protocol, callback] of protocolLoader.protocols) {
       const namespace = protocol.replace(":", "");
 
       // add namespace
@@ -35,5 +37,3 @@ export const more_imports: BunPlugin = {
     }
   },
 };
-
-await Bun.plugin(more_imports);

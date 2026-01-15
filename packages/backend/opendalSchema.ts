@@ -7,7 +7,7 @@ import { generate } from "ts-to-zod";
 
 // 配置并发请求数量
 const CONCURRENT_REQUESTS = 8; // 降低并发数以避免请求失败
-const generatedPath = "./src/loader/protocal/opendal/generated/";
+const generatedPath = "./src/loader/protocal/generated/";
 
 // 进度显示函数（改进版，包含时间估算）
 class ProgressTracker {
@@ -134,7 +134,9 @@ async function main() {
 
   // 获取服务列表
   const res = await ky
-    .get("https://cdn.jsdelivr.net/gh/apache/opendal/bindings/java/Cargo.toml")
+    .get(
+      "https://raw.githubusercontent.com/apache/opendal/refs/heads/main/bindings/java/Cargo.toml"
+    )
     .text();
   const toml = TOML.parse(res);
   // @ts-ignore

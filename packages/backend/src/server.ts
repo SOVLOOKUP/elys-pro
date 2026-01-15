@@ -6,8 +6,8 @@ import type { App } from "./generated/prisma/client";
 import {
   schemas,
   type OpendalSchema,
-} from "./loader/protocal/opendal/generated/schema";
-import { newURL } from "./loader/protocal/opendal/utils";
+} from "./loader/protocal/generated/schema";
+import { newURL } from "./loader/protocal/utils";
 import { Operator } from "opendal";
 
 // 生产前端地址
