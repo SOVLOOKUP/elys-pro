@@ -63,7 +63,7 @@ bun run dev
 
 点击版本卡片上的"访问"按钮，将在新标签页中打开应用。
 
-访问地址格式：`http://localhost:3000/app/{应用名}/{版本号}/`
+访问地址格式：`http://localhost:3000/{应用名}/{版本号}/`
 
 ### 删除应用
 
@@ -105,7 +105,7 @@ packages/frontend/
 - `DELETE /api/:name?version=xxx` - 删除应用版本
 - `DELETE /api/:name?version=all` - 删除应用所有版本
 
-- `ALL /app/:name/:version/*` - 访问应用
+- `ALL /:name/:version/*` - 访问应用
 
 ## 开发说明
 

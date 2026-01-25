@@ -1,8 +1,6 @@
 import { Elysia, NotFoundError, status, t } from "elysia";
-import { maxSatisfying } from "semver";
 import cors from "@elysiajs/cors";
 import { prisma } from "./db";
-import type { App } from "./generated/prisma/client";
 import {
   schemas,
   type OpendalSchema,
@@ -104,7 +102,7 @@ const mainApp = new Elysia()
                 success: boolean;
                 error?: string;
               }>((resolve) => {
-                const validator = new Worker("./workers/worker-validator.ts");
+                const validator = new Worker("./workers/worker-validator");
 
                 const timeout = setTimeout(() => {
                   validator.terminate();
@@ -130,7 +128,7 @@ const mainApp = new Elysia()
                 validator.addEventListener("error", (error) => {
                   clearTimeout(timeout);
                   validator.terminate();
-                  resolve({ success: false, error: String(error) });
+                  resolve({ success: false, error: error.message });
                 });
 
                 validator.postMessage({
@@ -246,102 +244,34 @@ const mainApp = new Elysia()
           )
       )
   )
-  // 应用运行
-  .all(
-    "/app/:name/:version/*",
-    async (req) => {
-      let targetApp: App;
-      // 最新版本
-      if (req.params.version === "latest") {
-        const apps = await prisma.app.findMany({
-          where: {
-            name: req.params.name,
-          },
-        });
+  // 携带后端地址跳转到前端
+  .get("/", ({ request }) => {
+    const target = new URL(frontend_origin);
 
-        const versions = apps.map((item) => item.version);
+    // 远程仅允许 https 安全访问
+    const atLocalhost =
+      request.url.startsWith("http://localhost") ||
+      request.url.startsWith("http://127.0.0.1") ||
+      request.url.startsWith("http://0.0.0.0");
 
-        const latestVersion = maxSatisfying(versions, "*");
+    const backendURL = atLocalhost
+      ? request.url
+      : request.url.replace("http", "https");
 
-        if (!latestVersion) {
-          return status(404, "No versions found");
-        }
+    target.searchParams.set("backendURL", encodeURIComponent(backendURL));
 
-        const app = apps.find((item) => item.version === latestVersion)!;
+    // 跳转到前端地址
+    return Response.redirect(target.href, 302);
+  })
 
-        targetApp = app;
-      } else {
-        // 指定版本
-        const app = await prisma.app.findFirst({
-          where: {
-            name: req.params.name,
-            version: req.params.version,
-          },
-        });
-
-        if (!app) {
-          return status(404, "Version not found");
-        }
-
-        targetApp = app;
-      }
-
-      const store = await prisma.store.findUnique({
-        where: {
-          id: targetApp.storeId,
-        },
-      });
-
-      if (!store) {
-        return new NotFoundError(`Store ${targetApp.storeId} not found`);
-      }
-
-      const url = newURL(
-        store.schema as OpendalSchema,
-        store.config as Record<string, string>,
-        targetApp.path
-      );
-
-      const appModule = await import(url);
-
-      const app = new Elysia({
-        prefix: `/app/${req.params.name}/${req.params.version}`,
-      }).use(appModule.app as Elysia);
-
-      return await app.handle(req.request);
-    },
-    {
-      parse: "none",
-    }
-  );
 
 const startServer = async () => {
   try {
-    const mainPort = parseInt(Bun.env.MAIN_PORT || "3000");
+    const adminPort = parseInt(Bun.env.ADMIN_PORT || "3000");
 
-    mainApp
-      // 携带后端地址跳转到前端
-      .get("/", ({ request }) => {
-        const target = new URL(frontend_origin);
+    mainApp.listen({ port: adminPort });
 
-        // 远程仅允许 https 安全访问
-        const atLocalhost =
-          request.url.startsWith("http://localhost") ||
-          request.url.startsWith("http://127.0.0.1") ||
-          request.url.startsWith("http://0.0.0.0");
-
-        const backendURL = atLocalhost
-          ? request.url
-          : request.url.replace("http", "https");
-
-        target.searchParams.set("backendURL", encodeURIComponent(backendURL));
-
-        // 跳转到前端地址
-        return Response.redirect(target.href, 302);
-      })
-      .listen({ port: mainPort });
-
-    console.log(`Server URL: http://localhost:${mainPort}`);
+    console.log(`Server URL: http://localhost:${adminPort}`);
     return mainApp;
   } catch (error) {
     console.error("✗ Failed to start main server:", error);

@@ -105,6 +105,8 @@ services:
 | `DATABASE_URL`    | 数据库连接 URL | sqlite 文件路径/postgres 数据库链接 | file:/app/data/sqlite.db              |
 | `VALKEY_URL`      | 缓存连接 URL   | 缓存文件路径/redis 数据库链接       | ${os.tmpdir()}/keyv-file/default.json |
 | `FRONTEND_ORIGIN` | 前端界面地址   | 前端界面地址                        | https://elys.metapoint.tech           |
+| `ADMIN_PORT`      | 后端服务端口   | 后端服务监听端口                    | 3000                                  |
+| `APP_PORT`        | Worker 应用端口| Worker 应用服务监听端口             | 2999                                  |
 
 ## 使用
 

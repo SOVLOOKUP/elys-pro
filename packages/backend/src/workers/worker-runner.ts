@@ -1,102 +1,84 @@
-// todo
 import Elysia from "elysia";
+import { moreImports } from "../loader";
+import type { App } from "../generated/prisma/client";
+import { maxSatisfying } from "semver";
+import { prisma } from "../db";
+import { status } from "elysia";
+import { NotFoundError } from "elysia";
+import { newURL } from "../loader/protocal/utils";
+import type { OpendalSchema } from "../loader/protocal/generated/schema";
 
-let serverInstance: Elysia | null = null;
+await Bun.plugin(moreImports);
 
-addEventListener("message", async (event) => {
-  const { type, data } = event.data;
+const mainApp = new Elysia()
+  // 应用运行
+  .all(
+    "/:name/:version/*",
+    async (req) => {
+      let targetApp: App;
+      // 最新版本
+      if (req.params.version === "latest") {
+        const apps = await prisma.app.findMany({
+          where: {
+            name: req.params.name,
+          },
+        });
 
-  if (type === "start") {
-    try {
-      const workerModule = await import(data.workerPath);
+        const versions = apps.map((item) => item.version);
 
-      if (!(workerModule.app instanceof Elysia)) {
-        throw new Error("Worker module does not export an app instance");
-      }
+        const latestVersion = maxSatisfying(versions, "*");
 
-      let app = workerModule.app as Elysia;
-
-      if (data.healthCheck) {
-        let hasHealthRoute = false;
-        for (const route of app.routes) {
-          if (route.path === "/health") {
-            hasHealthRoute = true;
-            break;
-          }
+        if (!latestVersion) {
+          return status(404, "No versions found");
         }
 
-        if (!hasHealthRoute) {
-          app.get("/health", () => ({
-            status: "ok",
-            worker: data.name,
-            timestamp: new Date().toISOString(),
-          }));
-        }
-      }
+        const app = apps.find((item) => item.version === latestVersion)!;
 
-      app.decorate("workerName", data.name);
-
-      if (data.prefix) {
-        const prefixedApp = new Elysia({
-          prefix: data.prefix,
-        });
-        prefixedApp.use(app);
-        serverInstance = prefixedApp.listen({ port: data.port });
-
-        postMessage({
-          type: "started",
-          message: `Worker ${data.name} with prefix ${data.prefix} started on port ${data.port}`,
-        });
+        targetApp = app;
       } else {
-        serverInstance = app.listen({ port: data.port });
-        postMessage({
-          type: "started",
-          message: `Worker ${data.name} started on port ${data.port}`,
+        // 指定版本
+        const app = await prisma.app.findUnique({
+          where: {
+            name: req.params.name,
+            version: req.params.version,
+          },
         });
+
+        if (!app) {
+          return status(404, "Version not found");
+        }
+
+        targetApp = app;
       }
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : String(error);
-      postMessage({
-        type: "error",
-        error: err,
+
+      const store = await prisma.store.findUnique({
+        where: {
+          id: targetApp.storeId,
+        },
       });
-    }
-  } else if (type === "terminate") {
-    if (serverInstance && serverInstance.stop) {
-      // @ts-ignore
-      const name = serverInstance.decorator["workerName"];
-      console.log(`Worker ${name} is shutting down gracefully...`);
 
-      const forceExitTimer = setTimeout(() => {
-        console.log(`Worker ${name} force exit after 30 seconds timeout.`);
-        process.exit(0);
-      }, 30000);
+      if (!store) {
+        return new NotFoundError(`Store ${targetApp.storeId} not found`);
+      }
 
-      serverInstance
-        .stop()
-        .then(() => {
-          clearTimeout(forceExitTimer);
-          console.log(`Worker ${name} shutdown completed.`);
-          postMessage({
-            type: "shutdown",
-            message: `Worker ${name} shutdown completed.`,
-          });
-          process.exit(0);
-        })
-        .catch((error: any) => {
-          console.error(
-            `Error during graceful shutdown of worker ${name}:`,
-            error
-          );
-          clearTimeout(forceExitTimer);
-          postMessage({
-            type: "shutdown-error",
-            error: error.message,
-          });
-          process.exit(1);
-        });
-    } else {
-      process.exit(0);
+      const url = newURL(
+        store.schema as OpendalSchema,
+        store.config as Record<string, string>,
+        targetApp.path
+      );
+
+      const appModule = await import(url);
+
+      const app = new Elysia({
+        prefix: `/${req.params.name}/${req.params.version}`,
+      }).use(appModule.app as Elysia);
+
+      return await app.handle(req.request);
+    },
+    {
+      parse: "none",
     }
-  }
-});
+  );
+
+
+mainApp.listen({ port: parseInt(Bun.env.APP_PORT || "2999") });

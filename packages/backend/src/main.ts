@@ -10,3 +10,13 @@ await migrateDeploy();
 
 // 启动服务器
 await startServer();
+
+// const worker = new Worker(new URL("./workers/worker-runner.ts", import.meta.url));
+
+// worker.addEventListener("message", (event) => {
+//     console.log(event.data);
+// });
+
+// worker.postMessage({
+//     type: "start",
+// });

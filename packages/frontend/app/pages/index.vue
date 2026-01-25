@@ -268,7 +268,7 @@ async function deleteApp() {
 
 // 生成应用 URL 地址
 const appURL = (version: string) =>
-  new URL(`/app/${selectedApp.value}/${version}/`, useConfigStore().backendURL)
+  new URL(`/${selectedApp.value}/${version}/`, useConfigStore().backendURL)
     .href;
 
 // 加载可用的 store 列表
