@@ -1,5 +1,6 @@
 import { moreImports } from "./loader";
 import { migrateDeploy } from "./db";
+import { mainApp } from "./server";
 
 // 注册 bun 插件, 拓展 import 逻辑
 await Bun.plugin(moreImports);
@@ -27,7 +28,6 @@ interface WorkerInfo {
   lastHeartbeat: number;
   lastRequestTime: number;
   isOverloaded: boolean;
-  port: number;
   // 性能指标
   memory?: {
     rss: string;
@@ -64,7 +64,6 @@ class WorkerPool {
   private nextWorkerId = 1;
   private lastScaleUpTime = 0;
   private lastScaleDownTime = 0;
-  private serverPort = parseInt(Bun.env.APP_PORT || "2999");
   private requestCount = 0;
   private lastRequestTime = Date.now();
   private recentRequestRates: number[] = [];
@@ -108,7 +107,7 @@ class WorkerPool {
       const sampleTime =
         now -
         (this.recentRequestRates.length - 1 - index) *
-          (this.REQUEST_RATE_WINDOW / this.REQUEST_RATE_SAMPLES);
+        (this.REQUEST_RATE_WINDOW / this.REQUEST_RATE_SAMPLES);
       return sampleTime >= windowStart;
     });
 
@@ -265,14 +264,13 @@ class WorkerPool {
 
     // 处理 worker 消息
     worker.addEventListener("message", (event) => {
-      const { type, payload, port, idleTime, timestamp } = event.data;
+      const { type, payload, idleTime, timestamp } = event.data;
 
       switch (type) {
         case "started":
           workerInfo.status = "running";
-          if (port) workerInfo.port = port;
           console.log(
-            `[Main] Worker ${id} 已启动，监听端口: ${workerInfo.port}`,
+            `[Main] Worker ${id} 已启动`,
           );
           break;
 
@@ -437,7 +435,6 @@ class WorkerPool {
           lastHeartbeat: Date.now(),
           lastRequestTime: Date.now(),
           isOverloaded: false,
-          port: this.serverPort,
         };
 
         // 设置 worker 事件监听
@@ -663,7 +660,7 @@ class WorkerPool {
     const avgResponseTime =
       recentHistory.length > 0
         ? recentHistory.reduce((sum, h) => sum + h.responseTime, 0) /
-          recentHistory.length
+        recentHistory.length
         : 0;
 
     // 计算QPS
@@ -740,25 +737,25 @@ await migrateDeploy();
 // 初始化 worker 池
 const workerPool = new WorkerPool();
 
-// 主进程 HTTP 服务器（负载均衡器）
-const server = Bun.serve({
-  port: parseInt(Bun.env.APP_PORT || "2999"),
-  async fetch(req) {
-    // 处理监控页面
-    if (req.url.includes("/monitoring.html") || req.url === "/monitoring") {
-      const file = Bun.file("./public/monitoring.html");
-      return new Response(file);
-    }
-
-    // 处理监控API
-    if (req.url.includes("/api/monitoring")) {
-      const monitoringData = workerPool.getMonitoringData();
-      return new Response(JSON.stringify(monitoringData, null, 2), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
+// 主进程 HTTP 服务器（负载均衡器）- 基于 mainApp 扩展
+const loadBalancerApp = mainApp
+  // 监控页面
+  .get("/monitoring", async () => {
+    const file = Bun.file("./public/monitoring.html");
+    return new Response(file);
+  })
+  // 监控API
+  .get("/api/monitoring", async () => {
+    const monitoringData = workerPool.getMonitoringData();
+    return new Response(JSON.stringify(monitoringData, null, 2), {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  })
+  // 负载均衡处理 - 所有其他请求
+  .all("/*", async ({ request }) => {
+    const req = request;
 
     // 记录请求
     workerPool.recordRequest();
@@ -897,10 +894,14 @@ const server = Bun.serve({
         status: 500,
       });
     }
-  },
-});
+  });
 
-console.log(`[Main] 负载均衡器已启动，监听端口: ${server.port}`);
+const port = parseInt(Bun.env.APP_PORT || "3000");
+
+// 启动服务器
+loadBalancerApp.listen(port);
+
+console.log(`[Main] 负载均衡器已启动，监听端口: ${port}`);
 
 // 优雅关闭处理
 process.on("SIGINT", () => {

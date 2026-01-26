@@ -267,19 +267,4 @@ const mainApp = new Elysia()
     return Response.redirect(target.href, 302);
   });
 
-const startServer = async () => {
-  try {
-    const adminPort = parseInt(Bun.env.ADMIN_PORT || "3000");
-
-    mainApp.listen({ port: adminPort });
-
-    console.log(`Server URL: http://localhost:${adminPort}`);
-    return mainApp;
-  } catch (error) {
-    console.error("✗ Failed to start main server:", error);
-    process.exit(1);
-  }
-};
-
-export type { mainApp };
-export { startServer };
+export  { mainApp };

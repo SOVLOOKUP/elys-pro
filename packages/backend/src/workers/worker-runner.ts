@@ -243,7 +243,6 @@ const mainApp = new Elysia()
   );
 
 let server: ReturnType<typeof mainApp.listen>;
-const port = parseInt(Bun.env.APP_PORT || "2999");
 
 // 启动负载监测
 monitorLoad();
@@ -251,7 +250,7 @@ monitorLoad();
 self.addEventListener("message", async (event) => {
   if (event.data.type === "start") {
     // 不再监听端口，而是通过消息传递处理请求
-    self.postMessage({ type: "started", port });
+    self.postMessage({ type: "started" });
     console.log(`[Worker] 启动成功，准备接收请求`);
   } else if (event.data.type === "stop") {
     console.log(`[Worker] 收到停止消息，当前 isRunning: ${isRunning}`);
