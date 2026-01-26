@@ -100,13 +100,18 @@ async function monitorLoad() {
       );
     }
 
-    // 检查是否闲置
+    // 检查是否闲置（只在首次闲置时发送消息，避免频繁发送）
     const idleTime = Date.now() - lastRequestTime;
     if (idleTime > CONFIG.IDLE_TIMEOUT && currentTasks === 0) {
-      self.postMessage({ type: "idle", idleTime, timestamp: Date.now() });
-      console.log(
-        `[Worker] 检测到闲置状态 - 闲置时间: ${(idleTime / 1000).toFixed(2)}s`,
-      );
+      // 首次检测到闲置时发送消息，后续每30秒发送一次更新
+      const lastIdleNotificationTime = (self as any).lastIdleNotificationTime || 0;
+      if (Date.now() - lastIdleNotificationTime > 30000) {
+        self.postMessage({ type: "idle", idleTime, timestamp: Date.now() });
+        (self as any).lastIdleNotificationTime = Date.now();
+        console.log(
+          `[Worker] 检测到闲置状态 - 闲置时间: ${(idleTime / 1000).toFixed(2)}s`,
+        );
+      }
     }
   } catch (error) {
     console.error(`[Worker] 负载监测错误:`, error);

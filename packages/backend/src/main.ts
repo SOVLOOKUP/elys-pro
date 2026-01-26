@@ -287,11 +287,10 @@ class WorkerPool {
           break;
 
         case "idle":
-          console.log(
-            `[Main] Worker ${id} 闲置: ${(idleTime / 1000).toFixed(2)}s`,
-          );
-          // 尝试缩容
-          this.tryScaleDown();
+          // 只有当 worker 数量超过最小值时才尝试缩容
+          if (this.workers.size > CONFIG.MIN_WORKERS) {
+            this.tryScaleDown();
+          }
           break;
 
         case "response":
@@ -363,9 +362,6 @@ class WorkerPool {
   private tryScaleDown() {
     // 检查是否达到最小 worker 数量
     if (this.workers.size <= CONFIG.MIN_WORKERS) {
-      console.log(
-        `[Main] 已达到最小 worker 数量: ${CONFIG.MIN_WORKERS}，跳过缩容`,
-      );
       return;
     }
 
@@ -373,7 +369,6 @@ class WorkerPool {
     const cooldownRemaining =
       CONFIG.SCALE_DOWN_COOLDOWN - (Date.now() - this.lastScaleDownTime);
     if (cooldownRemaining > 0) {
-      console.log(`[Main] 缩容冷却中，剩余 ${cooldownRemaining}ms，跳过缩容`);
       return;
     }
 
@@ -385,33 +380,24 @@ class WorkerPool {
         Date.now() - worker.lastRequestTime > 30000, // 30秒无请求
     );
 
-    console.log(
-      `[Main] 查找闲置 worker: 总数=${this.workers.size}, 闲置数=${idleWorkers.length}, 最小数=${CONFIG.MIN_WORKERS}`,
-    );
-
     if (idleWorkers.length > 0) {
       // 选择最早闲置的 worker
       const workerToStop = idleWorkers.sort(
         (a, b) => a.lastRequestTime - b.lastRequestTime,
       )[0];
 
-      if (!workerToStop) {
-        console.log(`[Main] 未找到合适的 worker 进行缩容`);
-        return;
+      if (workerToStop) {
+        console.log(
+          `[Main] 停止闲置 worker: ${workerToStop.id}，闲置时间: ${((Date.now() - workerToStop.lastRequestTime) / 1000).toFixed(2)}s`,
+        );
+        workerToStop.status = "stopping";
+        workerToStop.worker.postMessage({ type: "stop" });
+
+        this.lastScaleDownTime = Date.now();
+        console.log(
+          `[Main] 缩容完成，当前 worker 数量: ${this.workers.size - 1}`,
+        );
       }
-
-      console.log(
-        `[Main] 停止闲置 worker: ${workerToStop.id}，闲置时间: ${((Date.now() - workerToStop.lastRequestTime) / 1000).toFixed(2)}s`,
-      );
-      workerToStop.status = "stopping";
-      workerToStop.worker.postMessage({ type: "stop" });
-
-      this.lastScaleDownTime = Date.now();
-      console.log(
-        `[Main] 缩容完成，当前 worker 数量: ${this.workers.size - 1}`,
-      );
-    } else {
-      console.log(`[Main] 没有找到闲置的 worker 进行缩容`);
     }
   }
 
