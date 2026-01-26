@@ -8,9 +8,13 @@ import { NotFoundError } from "elysia";
 import { newURL } from "../loader/protocal/utils";
 import type { OpendalSchema } from "../loader/protocal/generated/schema";
 
+// prevents TS errors
+declare var self: Worker;
+
 await Bun.plugin(moreImports);
 
 const mainApp = new Elysia()
+  .get("/", () => "Hello Elysia")
   // 应用运行
   .all(
     "/:name/:version/*",
@@ -64,7 +68,7 @@ const mainApp = new Elysia()
       const url = newURL(
         store.schema as OpendalSchema,
         store.config as Record<string, string>,
-        targetApp.path
+        targetApp.path,
       );
 
       const appModule = await import(url);
@@ -77,8 +81,20 @@ const mainApp = new Elysia()
     },
     {
       parse: "none",
-    }
+    },
   );
 
+let server: ReturnType<typeof mainApp.listen>;
+const port = parseInt(Bun.env.APP_PORT || "2999");
 
-mainApp.listen({ port: parseInt(Bun.env.APP_PORT || "2999") });
+self.addEventListener("message", (event) => {
+  if (event.data.type === "start") {
+    server = mainApp.listen({ port });
+    self.postMessage({ type: "started", port });
+  } else if (event.data.type === "stop") {
+    if (server) {
+      server.stop();
+      self.postMessage({ type: "stopped" });
+    }
+  }
+});

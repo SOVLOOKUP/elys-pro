@@ -11,12 +11,20 @@ await migrateDeploy();
 // 启动服务器
 await startServer();
 
-// const worker = new Worker(new URL("./workers/worker-runner.ts", import.meta.url));
+const runner = new Worker(
+  new URL("./workers/worker-runner.ts", import.meta.url).href,
+);
 
-// worker.addEventListener("message", (event) => {
-//     console.log(event.data);
-// });
+runner.addEventListener("message", (event) => {
+  console.log("Worker message:", event.data);
+});
 
-// worker.postMessage({
-//     type: "start",
-// });
+runner.addEventListener("error", (error) => {
+  console.error("Worker error:", error);
+});
+
+runner.postMessage({
+  type: "start",
+});
+
+console.log("Worker started, waiting for message...");

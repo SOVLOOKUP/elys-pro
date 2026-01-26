@@ -25,7 +25,7 @@ const mainApp = new Elysia()
             /127.0.0.1:?\d*$/,
             /0.0.0.0:?\d*$/,
           ],
-        })
+        }),
       )
       .get("/health", () => ({ status: "ok" }))
       // 应用管理
@@ -72,7 +72,7 @@ const mainApp = new Elysia()
                 // 指定版本号或 all
                 version: t.Union([t.String(), t.Literal("all")]),
               }),
-            }
+            },
           )
           // 创建应用
           .post(
@@ -94,7 +94,7 @@ const mainApp = new Elysia()
               const url = newURL(
                 store.schema as OpendalSchema,
                 store.config as Record<string, string>,
-                body.path
+                body.path,
               );
 
               // 校验应用是否符合规范
@@ -102,7 +102,10 @@ const mainApp = new Elysia()
                 success: boolean;
                 error?: string;
               }>((resolve) => {
-                const validator = new Worker("./workers/worker-validator");
+                const validator = new Worker(
+                  new URL("./workers/worker-validator.ts", import.meta.url)
+                    .href,
+                );
 
                 const timeout = setTimeout(() => {
                   validator.terminate();
@@ -140,7 +143,7 @@ const mainApp = new Elysia()
               if (!validationResult.success) {
                 return status(
                   400,
-                  validationResult.error || "Invalid Elysia application"
+                  validationResult.error || "Invalid Elysia application",
                 );
               } else {
                 const app = await prisma.app.create({
@@ -160,8 +163,8 @@ const mainApp = new Elysia()
                 path: t.String(),
                 storeId: t.String(),
               }),
-            }
-          )
+            },
+          ),
       )
       // 存储管理
       .group("/store", (app) =>
@@ -180,7 +183,7 @@ const mainApp = new Elysia()
                 const timeoutPromise = new Promise((_, reject) => {
                   setTimeout(
                     () => reject(new Error("Connection test timeout")),
-                    3000
+                    3000,
                   ); // 3秒超时
                 });
 
@@ -201,7 +204,7 @@ const mainApp = new Elysia()
                 schema: t.Enum(Object.fromEntries(schemas.map((i) => [i, i]))),
                 config: t.Record(t.String(), t.String()),
               }),
-            }
+            },
           )
           .get("/:store", async ({ params }) => {
             const result = await prisma.store.findUnique({
@@ -227,7 +230,7 @@ const mainApp = new Elysia()
                 schema: t.Enum(Object.fromEntries(schemas.map((i) => [i, i]))),
                 config: t.Record(t.String(), t.String()),
               }),
-            }
+            },
           )
           .delete(
             "/:store",
@@ -240,9 +243,9 @@ const mainApp = new Elysia()
             },
             {
               body: t.Object({}),
-            }
-          )
-      )
+            },
+          ),
+      ),
   )
   // 携带后端地址跳转到前端
   .get("/", ({ request }) => {
@@ -262,8 +265,7 @@ const mainApp = new Elysia()
 
     // 跳转到前端地址
     return Response.redirect(target.href, 302);
-  })
-
+  });
 
 const startServer = async () => {
   try {
