@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker池监控系统</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+    }
+
+    .stat-card h3 {
+      color: #667eea;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .value {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .unit {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .stat-card.success .value {
+      color: #10b981;
+    }
+
+    .stat-card.warning .value {
+      color: #f59e0b;
+    }
+
+    .stat-card.danger .value {
+      color: #ef4444;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .chart-card h3 {
+      color: #667eea;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
+    .workers-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      margin-bottom: 30px;
+    }
+
+    .workers-section h3 {
+      color: #667eea;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .workers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .worker-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 10px;
+      padding: 20px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .worker-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .worker-card.running {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    }
+
+    .worker-card.overloaded {
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    }
+
+    .worker-card.stopped {
+      background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+      opacity: 0.7;
+    }
+
+    .worker-card h4 {
+      color: #333;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .worker-card .status {
+      font-size: 0.8em;
+      padding: 5px 10px;
+      border-radius: 15px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .worker-card .status.running {
+      background: #10b981;
+    }
+
+    .worker-card .status.overloaded {
+      background: #ef4444;
+    }
+
+    .worker-card .status.stopped {
+      background: #6b7280;
+    }
+
+    .worker-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 0.9em;
+    }
+
+    .worker-info div {
+      color: #555;
+    }
+
+    .worker-info span {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .memory-section {
+      grid-column: 1 / -1;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .memory-label {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .memory-value {
+      font-size: 0.85em;
+      color: #666;
+    }
+
+    .memory-value div {
+      margin: 3px 0;
+    }
+
+    .memory-value span {
+      font-weight: bold;
+      color: #059669;
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      padding: 20px;
+      margin-top: 30px;
+      opacity: 0.8;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 Worker池监控系统</h1>
+      <p>实时监控Worker池运行状态、负载均衡和请求处理情况</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card success">
+        <h3>请求成功率</h3>
+        <div class="value" id="successRate">0.00</div>
+        <div class="unit">%</div>
+      </div>
+      <div class="stat-card">
+        <h3>总请求数</h3>
+        <div class="value" id="totalRequests">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card">
+        <h3>成功请求数</h3>
+        <div class="value" id="successfulRequests">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card danger">
+        <h3>失败请求数</h3>
+        <div class="value" id="failedRequests">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card">
+        <h3>活跃请求数</h3>
+        <div class="value" id="activeRequests">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card warning">
+        <h3>队列请求数</h3>
+        <div class="value" id="queuedRequests">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card">
+        <h3>Worker总数</h3>
+        <div class="value" id="totalWorkers">0</div>
+        <div class="unit">个</div>
+      </div>
+      <div class="stat-card">
+        <h3>QPS</h3>
+        <div class="value" id="qps">0</div>
+        <div class="unit">请求/秒</div>
+      </div>
+      <div class="stat-card">
+        <h3>主进程内存使用</h3>
+        <div class="value" id="totalMemory">0</div>
+        <div class="unit">MB</div>
+      </div>
+      <div class="stat-card">
+        <h3>平均CPU使用率</h3>
+        <div class="value" id="avgCpuUsage">0</div>
+        <div class="unit">%</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>📈 请求成功率趋势</h3>
+        <div class="chart-container">
+          <canvas id="successRateChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>⚡ 平均响应时间</h3>
+        <div class="chart-container">
+          <canvas id="responseTimeChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>📊 请求流量</h3>
+        <div class="chart-container">
+          <canvas id="requestFlowChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>🎯 Worker负载分布</h3>
+        <div class="chart-container">
+          <canvas id="workerLoadChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>💾 内存使用趋势</h3>
+        <div class="chart-container">
+          <canvas id="memoryChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>⚙️ CPU使用率趋势</h3>
+        <div class="chart-container">
+          <canvas id="cpuChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="workers-section">
+      <h3>👥 Worker状态详情</h3>
+      <div class="workers-grid" id="workersGrid">
+        <div class="loading">加载中...</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Worker池监控系统 | 自动刷新间隔: 2秒</p>
+    </div>
+  </div>
+
+  <script>
+    let successRateChart, responseTimeChart, requestFlowChart, workerLoadChart, memoryChart, cpuChart;
+    let successRateHistory = [];
+    let responseTimeHistory = [];
+    let requestFlowHistory = [];
+    let memoryHistory = [];
+    let cpuHistory = [];
+    let timestamps = [];
+    const maxDataPoints = 30;
+
+    async function fetchMonitoringData() {
+      try {
+        const response = await fetch('/api/monitoring');
+        const data = await response.json();
+        updateDashboard(data);
+      } catch (error) {
+        console.error('获取监控数据失败:', error);
+      }
+    }
+
+    function updateDashboard(data) {
+      updateStats(data);
+      updateCharts(data);
+      updateWorkers(data);
+    }
+
+    function updateStats(data) {
+      document.getElementById('successRate').textContent = data.successRate.toFixed(2);
+      document.getElementById('totalRequests').textContent = data.totalRequests.toLocaleString();
+      document.getElementById('successfulRequests').textContent = data.successfulRequests.toLocaleString();
+      document.getElementById('failedRequests').textContent = data.failedRequests.toLocaleString();
+      document.getElementById('activeRequests').textContent = data.activeRequests.toLocaleString();
+      document.getElementById('queuedRequests').textContent = data.queuedRequests.toLocaleString();
+      document.getElementById('totalWorkers').textContent = data.totalWorkers.toLocaleString();
+      document.getElementById('qps').textContent = data.qps.toLocaleString();
+      
+      // 更新系统性能指标
+      if (data.systemMetrics) {
+        document.getElementById('totalMemory').textContent = data.systemMetrics.totalMemory;
+        document.getElementById('avgCpuUsage').textContent = data.systemMetrics.avgCpuUsage;
+      }
+    }
+
+    function updateCharts(data) {
+      const now = new Date().toLocaleTimeString();
+      
+      if (timestamps.length >= maxDataPoints) {
+        timestamps.shift();
+        successRateHistory.shift();
+        responseTimeHistory.shift();
+        requestFlowHistory.shift();
+        memoryHistory.shift();
+        cpuHistory.shift();
+      }
+      
+      timestamps.push(now);
+      successRateHistory.push(data.successRate);
+      responseTimeHistory.push(data.avgResponseTime);
+      requestFlowHistory.push(data.qps);
+      
+      // 添加性能指标历史
+      if (data.systemMetrics) {
+        memoryHistory.push(parseFloat(data.systemMetrics.totalMemory));
+        cpuHistory.push(parseFloat(data.systemMetrics.avgCpuUsage));
+      }
+
+      updateSuccessRateChart();
+      updateResponseTimeChart();
+      updateRequestFlowChart();
+      updateWorkerLoadChart(data);
+      updateMemoryChart();
+      updateCpuChart();
+    }
+
+    function updateSuccessRateChart() {
+      if (!successRateChart) {
+        const ctx = document.getElementById('successRateChart').getContext('2d');
+        successRateChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timestamps,
+            datasets: [{
+              label: '成功率 (%)',
+              data: successRateHistory,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      } else {
+        successRateChart.data.labels = timestamps;
+        successRateChart.data.datasets[0].data = successRateHistory;
+        successRateChart.update('none');
+      }
+    }
+
+    function updateResponseTimeChart() {
+      if (!responseTimeChart) {
+        const ctx = document.getElementById('responseTimeChart').getContext('2d');
+        responseTimeChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timestamps,
+            datasets: [{
+              label: '平均响应时间 (ms)',
+              data: responseTimeHistory,
+              borderColor: '#667eea',
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              fill: true,
+              tension: 0.4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      } else {
+        responseTimeChart.data.labels = timestamps;
+        responseTimeChart.data.datasets[0].data = responseTimeHistory;
+        responseTimeChart.update('none');
+      }
+    }
+
+    function updateRequestFlowChart() {
+      if (!requestFlowChart) {
+        const ctx = document.getElementById('requestFlowChart').getContext('2d');
+        requestFlowChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: timestamps,
+            datasets: [{
+              label: 'QPS',
+              data: requestFlowHistory,
+              backgroundColor: 'rgba(245, 158, 11, 0.6)',
+              borderColor: '#f59e0b',
+              borderWidth: 1,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      } else {
+        requestFlowChart.data.labels = timestamps;
+        requestFlowChart.data.datasets[0].data = requestFlowHistory;
+        requestFlowChart.update('none');
+      }
+    }
+
+    function updateWorkerLoadChart(data) {
+      if (!workerLoadChart) {
+        const ctx = document.getElementById('workerLoadChart').getContext('2d');
+        workerLoadChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['运行中', '过载', '停止'],
+            datasets: [{
+              data: [0, 0, 0],
+              backgroundColor: [
+                '#10b981',
+                '#ef4444',
+                '#6b7280'
+              ],
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+      }
+
+      const runningCount = data.workers.filter(w => w.status === 'running' && !w.isOverloaded).length;
+      const overloadedCount = data.workers.filter(w => w.isOverloaded).length;
+      const stoppedCount = data.workers.filter(w => w.status === 'stopped').length;
+
+      workerLoadChart.data.datasets[0].data = [runningCount, overloadedCount, stoppedCount];
+      workerLoadChart.update('none');
+    }
+
+    function updateMemoryChart() {
+      if (!memoryChart) {
+        const ctx = document.getElementById('memoryChart').getContext('2d');
+        memoryChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timestamps,
+            datasets: [{
+              label: '主进程内存使用 (MB)',
+              data: memoryHistory,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              fill: true,
+              tension: 0.4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      } else {
+        memoryChart.data.labels = timestamps;
+        memoryChart.data.datasets[0].data = memoryHistory;
+        memoryChart.update('none');
+      }
+    }
+
+    function updateCpuChart() {
+      if (!cpuChart) {
+        const ctx = document.getElementById('cpuChart').getContext('2d');
+        cpuChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timestamps,
+            datasets: [{
+              label: '平均CPU使用率 (%)',
+              data: cpuHistory,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              fill: true,
+              tension: 0.4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      } else {
+        cpuChart.data.labels = timestamps;
+        cpuChart.data.datasets[0].data = cpuHistory;
+        cpuChart.update('none');
+      }
+    }
+
+    function updateWorkers(data) {
+      const workersGrid = document.getElementById('workersGrid');
+      
+      if (data.workers.length === 0) {
+        workersGrid.innerHTML = '<div class="loading">暂无Worker</div>';
+        return;
+      }
+
+      workersGrid.innerHTML = data.workers.map(worker => {
+        const statusClass = worker.isOverloaded ? 'overloaded' : worker.status;
+        const statusText = worker.isOverloaded ? '过载' : 
+                        worker.status === 'running' ? '运行中' : '已停止';
+        const lastHeartbeat = worker.lastHeartbeat ? 
+          new Date(worker.lastHeartbeat).toLocaleTimeString() : 'N/A';
+        const lastRequestTime = worker.lastRequestTime ? 
+          new Date(worker.lastRequestTime).toLocaleTimeString() : 'N/A';
+        const timeSinceHeartbeat = worker.lastHeartbeat ? 
+          Math.floor((Date.now() - worker.lastHeartbeat) / 1000) : 0;
+        const timeSinceRequest = worker.lastRequestTime ? 
+          Math.floor((Date.now() - worker.lastRequestTime) / 1000) : 0;
+
+        return `
+          <div class="worker-card ${statusClass}">
+            <h4>
+              ${worker.id}
+              <span class="status ${statusClass}">${statusText}</span>
+            </h4>
+            <div class="worker-info">
+              <div>状态: <span>${worker.status}</span></div>
+              <div>过载: <span>${worker.isOverloaded ? '是' : '否'}</span></div>
+              <div>最后心跳: <span>${lastHeartbeat}</span></div>
+              <div>心跳间隔: <span>${timeSinceHeartbeat}s</span></div>
+              <div>最后请求: <span>${lastRequestTime}</span></div>
+              <div>请求间隔: <span>${timeSinceRequest}s</span></div>
+              ${worker.memory ? `
+                <div class="memory-section">
+                  <div class="memory-label">内存使用:</div>
+                  <div class="memory-value">
+                    <div>RSS: <span>${worker.memory.rss} MB</span></div>
+                    <div>堆: <span>${worker.memory.heapUsed} / ${worker.memory.heapTotal} MB</span></div>
+                  </div>
+                </div>
+              ` : ''}
+              ${worker.cpu ? `
+                <div>CPU使用率: <span>${worker.cpu.usage}%</span></div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function init() {
+      fetchMonitoringData();
+      setInterval(fetchMonitoringData, 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
