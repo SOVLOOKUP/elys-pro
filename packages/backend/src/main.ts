@@ -174,7 +174,7 @@ class WorkerPool {
 
     try {
       const worker = new Worker(
-        new URL("./workers/worker-runner.ts", import.meta.url).href,
+        new URL("./workers/worker-runner", import.meta.url).href,
       );
 
       const workerInfo: WorkerInfo = {
@@ -425,7 +425,7 @@ class WorkerPool {
 
       try {
         const worker = new Worker(
-          new URL("./workers/worker-runner.ts", import.meta.url).href,
+          new URL("./workers/worker-runner", import.meta.url).href,
         );
 
         const workerInfo: WorkerInfo = {
@@ -663,10 +663,10 @@ class WorkerPool {
         recentHistory.length
         : 0;
 
-    // 计算QPS
+    // 计算QPS（每秒请求数）- 统计最近1秒内的请求数
     const now = Date.now();
     const recentRequests = this.requestHistory.filter(
-      (h) => now - h.timestamp < 60000,
+      (h) => now - h.timestamp < 1000,
     );
     const qps = recentRequests.length;
 
@@ -756,6 +756,7 @@ const loadBalancerApp = mainApp
   // 负载均衡处理 - 所有其他请求
   .all("/*", async ({ request }) => {
     const req = request;
+    const startTime = Date.now(); // 记录请求开始时间
 
     // 记录请求
     workerPool.recordRequest();
@@ -780,7 +781,7 @@ const loadBalancerApp = mainApp
         workerPool.requestHistory.push({
           timestamp: Date.now(),
           success: false,
-          responseTime: Date.now() - Date.now(),
+          responseTime: Date.now() - startTime,
         });
         return new Response("Request queue error", { status: 500 });
       }
@@ -807,7 +808,7 @@ const loadBalancerApp = mainApp
         workerPool.requestHistory.push({
           timestamp: Date.now(),
           success: false,
-          responseTime: Date.now() - Date.now(),
+          responseTime: Date.now() - startTime,
         });
         return new Response("No available workers", { status: 503 });
       }
@@ -839,7 +840,7 @@ const loadBalancerApp = mainApp
           workerPool.requestHistory.push({
             timestamp: Date.now(),
             success: false,
-            responseTime: Date.now() - Date.now(),
+            responseTime: Date.now() - startTime,
           });
           reject(new Error("Request timeout"));
         }
@@ -868,7 +869,7 @@ const loadBalancerApp = mainApp
       workerPool.requestHistory.push({
         timestamp: Date.now(),
         success: true,
-        responseTime: Date.now() - Date.now(),
+        responseTime: Date.now() - startTime,
       });
 
       // 构建响应
@@ -887,7 +888,7 @@ const loadBalancerApp = mainApp
       workerPool.requestHistory.push({
         timestamp: Date.now(),
         success: false,
-        responseTime: Date.now() - Date.now(),
+        responseTime: Date.now() - startTime,
       });
       console.error(`[Main] 请求处理错误:`, error);
       return new Response(JSON.stringify({ error: String(error) }), {
