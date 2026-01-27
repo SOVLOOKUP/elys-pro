@@ -20,6 +20,7 @@ const CONFIG = {
   PROCESSING_DELAY_THRESHOLD: parseInt(Bun.env.WORKER_DELAY_THRESHOLD || "200"),
   IDLE_TIMEOUT: parseInt(Bun.env.WORKER_IDLE_TIMEOUT || "30000"),
   MONITORING_INTERVAL: parseInt(Bun.env.WORKER_MONITORING_INTERVAL || "500"),
+  PORT: parseInt(Bun.env.APP_PORT || "2999"),
 };
 
 // 任务队列和处理统计
@@ -254,59 +255,25 @@ monitorLoad();
 
 self.addEventListener("message", async (event) => {
   if (event.data.type === "start") {
-    // 不再监听端口，而是通过消息传递处理请求
-    self.postMessage({ type: "started" });
-    console.log(`[Worker] 启动成功，准备接收请求`);
+    // 使用 SO_REUSEPORT 直接监听端口
+    try {
+      server = await mainApp.listen({
+        port: CONFIG.PORT,
+        reusePort: true,  // 启用 SO_REUSEPORT，内核自动分配连接
+      });
+      console.log(`[Worker] (PID: ${process.pid}) SO_REUSEPORT 服务器已启动，监听端口: ${CONFIG.PORT}`);
+      self.postMessage({ type: "started" });
+    } catch (error) {
+      console.error(`[Worker] 启动 SO_REUSEPORT 服务器失败:`, error);
+      self.postMessage({ type: "error", error: String(error) });
+    }
   } else if (event.data.type === "stop") {
-    console.log(`[Worker] 收到停止消息，当前 isRunning: ${isRunning}`);
+    console.log(`[Worker] 收到停止消息`);
     isRunning = false;
-    console.log(`[Worker] 设置 isRunning 为 false`);
     if (server) {
       server.stop();
       self.postMessage({ type: "stopped" });
-      console.log(`[Worker] 停止运行`);
-    }
-  } else if (event.data.type === "request") {
-    // 处理请求
-    const requestId = event.data.requestId;
-    const reqData = event.data.req;
-
-    try {
-      // 创建 Request 对象
-      const request = new Request(reqData.url, {
-        method: reqData.method,
-        headers: new Headers(reqData.headers),
-        body:
-          reqData.method !== "GET" && reqData.method !== "HEAD"
-            ? reqData.body
-            : undefined,
-      });
-
-      // 使用 mainApp 处理请求
-      const response = await mainApp.handle(request);
-
-      // 将响应转换为可序列化的格式
-      const responseData = {
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        body: await response.text(),
-      };
-
-      self.postMessage({
-        type: "response",
-        requestId,
-        response: responseData,
-      });
-    } catch (error) {
-      self.postMessage({
-        type: "response",
-        requestId,
-        response: {
-          status: 500,
-          headers: {},
-          body: JSON.stringify({ error: String(error) }),
-        },
-      });
+      console.log(`[Worker] 服务器已停止`);
     }
   }
 });

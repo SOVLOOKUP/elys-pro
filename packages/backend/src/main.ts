@@ -723,8 +723,13 @@ await migrateDeploy();
 // 初始化 worker 池
 const workerPool = new WorkerPool();
 
-// 主进程 HTTP 服务器（负载均衡器）- 基于 mainApp 扩展
-const loadBalancerApp = mainApp
+// 主进程 HTTP 服务器 - SO_REUSEPORT 架构
+// 主进程和 worker 进程都监听同一端口，内核自动分配连接
+const port = parseInt(Bun.env.APP_PORT || "2999");
+const adminPort = port + 1;
+
+// 创建主进程监控服务（使用独立端口 3000，避免与 worker 冲突）
+const adminApp = mainApp
   // 监控页面
   .get("/monitoring", async () => {
     const file = Bun.file("./public/monitoring.html");
@@ -739,156 +744,27 @@ const loadBalancerApp = mainApp
       },
     });
   })
-  // 负载均衡处理 - 所有其他请求
-  .all("/*", async ({ request }) => {
-    const req = request;
-    const startTime = Date.now(); // 记录请求开始时间
-
-    // 记录请求
-    workerPool.recordRequest();
-    workerPool.totalRequests++;
-
-    // 检查并发请求数
-    if (workerPool.activeRequests >= workerPool.maxConcurrentRequests) {
-      // 将请求放入队列
-      const queuePromise = new Promise((resolve, reject) => {
-        requestQueue.push({
-          req,
-          resolve,
-          reject,
-          startTime: Date.now(),
-        });
-      });
-
-      try {
-        return await queuePromise;
-      } catch (error) {
-        workerPool.failedRequests++;
-        workerPool.requestHistory.push({
-          timestamp: Date.now(),
-          success: false,
-          responseTime: Date.now() - startTime,
-        });
-        return new Response("Request queue error", { status: 500 });
-      }
-    }
-
-    // 获取负载最低的 worker
-    const worker = workerPool.getLeastLoadedWorker();
-
-    if (!worker) {
-      // 将请求放入队列
-      const queuePromise = new Promise((resolve, reject) => {
-        requestQueue.push({
-          req,
-          resolve,
-          reject,
-          startTime: Date.now(),
-        });
-      });
-
-      try {
-        return await queuePromise;
-      } catch (error) {
-        workerPool.failedRequests++;
-        workerPool.requestHistory.push({
-          timestamp: Date.now(),
-          success: false,
-          responseTime: Date.now() - startTime,
-        });
-        return new Response("No available workers", { status: 503 });
-      }
-    }
-
-    // 更新 worker 的最后请求时间
-    worker.lastRequestTime = Date.now();
-
-    // 增加活跃请求数
-    workerPool.activeRequests++;
-
-    // 生成请求 ID
-    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    // 创建 Promise 等待 worker 响应
-    const responsePromise = new Promise((resolve, reject) => {
-      pendingRequests.set(requestId, {
-        resolve,
-        reject,
-        startTime: Date.now(),
-      });
-
-      // 设置超时
-      setTimeout(() => {
-        if (pendingRequests.has(requestId)) {
-          pendingRequests.delete(requestId);
-          workerPool.activeRequests--;
-          workerPool.failedRequests++;
-          workerPool.requestHistory.push({
-            timestamp: Date.now(),
-            success: false,
-            responseTime: Date.now() - startTime,
-          });
-          reject(new Error("Request timeout"));
-        }
-      }, 60000);
-    });
-
-    // 将请求转发给 worker
-    worker.worker.postMessage({
-      type: "request",
-      requestId,
-      req: {
-        method: req.method,
-        url: req.url,
-        headers: Object.fromEntries(req.headers.entries()),
-        body: await req.text(),
-      },
-    });
-
-    try {
-      // 等待 worker 响应
-      const responseData = await responsePromise;
-
-      // 减少活跃请求数
-      workerPool.activeRequests--;
-      workerPool.successfulRequests++;
-      workerPool.requestHistory.push({
-        timestamp: Date.now(),
-        success: true,
-        responseTime: Date.now() - startTime,
-      });
-
-      // 构建响应
-      const headers = new Headers();
-      for (const [key, value] of Object.entries(responseData.headers)) {
-        headers.set(key, value as string);
-      }
-
-      return new Response(responseData.body, {
-        status: responseData.status,
-        headers,
-      });
-    } catch (error) {
-      workerPool.activeRequests--;
-      workerPool.failedRequests++;
-      workerPool.requestHistory.push({
-        timestamp: Date.now(),
-        success: false,
-        responseTime: Date.now() - startTime,
-      });
-      console.error(`[Main] 请求处理错误:`, error);
-      return new Response(JSON.stringify({ error: String(error) }), {
-        status: 500,
-      });
-    }
+  // 主进程状态API - 供外部查询
+  .get("/api/main/status", async () => {
+    return {
+      pid: process.pid,
+      port: port,
+      adminPort: adminPort,
+      workers: workerPool.getWorkerCount(),
+      timestamp: Date.now(),
+    };
   });
 
-const port = parseInt(Bun.env.APP_PORT || "3000");
+// 启动主进程监控服务
+const mainServer = await adminApp.listen(adminPort);
 
-// 启动服务器
-loadBalancerApp.listen(port);
+console.log(`[Main] 主进程 (PID: ${process.pid}) 监控服务已启动`);
+console.log(`[Main] 监控页面: http://localhost:${adminPort}/monitoring`);
+console.log(`[Main] 监控API: http://localhost:${adminPort}/api/monitoring`);
+console.log(`[Main] 应用端口: ${port} (由 worker 进程直接监听)`);
 
-console.log(`[Main] 负载均衡器已启动，监听端口: ${port}`);
+// 启动所有 worker 进程
+console.log(`[Main] 正在启动 worker 进程...`);
 
 // 优雅关闭处理
 process.on("SIGINT", () => {
